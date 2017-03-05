@@ -19,8 +19,7 @@ mkdir -p photos/misc
 for i in $IMAGES
 do
 	IMAGE=${i##*/}
-	#CREATEDATE=$(identify -format %[EXIF:DateTime] $i)
-	CREATEDATE=${IMAGE%%_*}
+	CREATEDATE=$(grep -o "20[0-9]\{6\}" <<< $IMAGE)
 	if date -d $CREATEDATE >/dev/null 2>&1
 	then
 		MONTH=$(date -d $CREATEDATE '+%b')
