@@ -24,14 +24,14 @@ cpfile() {
 	fi
 }
 
-IMAGES=$(find $ROOTDIR -regex ".*\.\(jpg\|gif\|png\|jpeg\)")
-VIDEOS=$(find $ROOTDIR -regex ".*\.\(mp4\)")
-OTHER=$(find $ROOTDIR -not -regex ".*\.\(jpg\|gif\|png\|jpeg\|mp4\)" | tail -n +2)
+IMAGES=$(find $ROOTDIR -regex ".*\.\(jpg\|gif\|png\|jpeg\)" -printf '%p;')
+VIDEOS=$(find $ROOTDIR -regex ".*\.\(mp4\)" -printf '%p;')
+OTHER=$(find $ROOTDIR -not -regex ".*\.\(jpg\|gif\|png\|jpeg\|mp4\)" -type f -printf '%p;' | tail -n +2)
 
 #IMAGES_COUNT=${#IMAGES[@]}
-IMAGES_COUNT=$(wc -w <<< $IMAGES)
-VIDEO_COUNT=$(wc -w <<< $VIDEOS)
-OTHER_COUNT=$(wc -w <<< $OTHER)
+IMAGES_COUNT=$(echo $IMAGES | sed 's/;/\n/g' | head -n -1 | wc -l)
+VIDEO_COUNT=$(echo $VIDEOS | sed 's/;/\n/g' | head -n -1 | wc -l)
+OTHER_COUNT=$(echo $OTHER | sed 's/;/\n/g' | head -n -1 | wc -l)
 
 TOTAL_COUNT=$(($IMAGES_COUNT + $VIDEO_COUNT + $OTHER_COUNT))
 RUNNING_COUNT=0
@@ -44,6 +44,8 @@ MISCFOLDER="$ROOTFOLDER/misc"
 mkdir -p $IMAGEFOLDER
 mkdir -p $VIDEOFOLDER
 mkdir -p $MISCFOLDER
+
+IFS=';'
 
 for i in $IMAGES
 do
@@ -68,7 +70,6 @@ do
 	cpfile $i "$VIDEOFOLDER"
 	((RUNNING_COUNT++))
 	progress $RUNNING_COUNT $TOTAL_COUNT
-	
 done
 
 for i in $OTHER
