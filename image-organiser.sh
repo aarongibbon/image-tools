@@ -2,7 +2,7 @@
 
 
 ROOTDIR="."
-
+CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
 while getopts d:t option
 do
         case "${option}"
@@ -50,7 +50,7 @@ IFS=';'
 for i in $IMAGES
 do
 	IMAGE=${i##*/}
-	CREATEDATE=$(grep -o "20[0-9]\{6\}" <<< $IMAGE)
+	CREATEDATE=$(grep -oE "$CREATEDATESTRING" <<< $IMAGE)
 	if date -d $CREATEDATE >/dev/null 2>&1
 	then
 		MONTH=$(date -d $CREATEDATE '+%b')
