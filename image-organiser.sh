@@ -38,7 +38,7 @@ OTHER_COUNT=$(echo $OTHER | sed 's/;/\n/g' | head -n -1 | wc -l)
 TOTAL_COUNT=$(($IMAGES_COUNT + $VIDEO_COUNT + $OTHER_COUNT))
 RUNNING_COUNT=0
 
-pushd $DESTDIR
+pushd $DESTDIR 1>/dev/null
 ROOTFOLDER="media"
 IMAGEFOLDER="$ROOTFOLDER/images"
 VIDEOFOLDER="$ROOTFOLDER/videos"
@@ -47,6 +47,9 @@ MISCFOLDER="$ROOTFOLDER/misc"
 mkdir -p $IMAGEFOLDER
 mkdir -p $VIDEOFOLDER
 mkdir -p $MISCFOLDER
+
+echo ""
+echo "Pre-transfer count of files in $DESTDIR""media/"": $(find $DESTDIR -type f | wc -l)"
 
 IFS=';'
 
@@ -82,4 +85,5 @@ do
 	progress $RUNNING_COUNT $TOTAL_COUNT
 done
 
+echo -e "\nPost-transfer count of files in $DESTDIR""media/"": $(find $DESTDIR -type f | wc -l)"
 echo ""
