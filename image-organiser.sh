@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 ROOTDIR="."
 CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
 while getopts s:d:t option
