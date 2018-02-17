@@ -3,12 +3,14 @@
 
 ROOTDIR="."
 CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
-while getopts d:t option
+while getopts s:d:t option
 do
         case "${option}"
         in
-                d) ROOTDIR=${OPTARG};;
+                s) ROOTDIR=${OPTARG};;
+		d) DESTDIR=${OPTARG};;
                 t) TEST=true;;
+		
         esac
 done
 
@@ -36,6 +38,7 @@ OTHER_COUNT=$(echo $OTHER | sed 's/;/\n/g' | head -n -1 | wc -l)
 TOTAL_COUNT=$(($IMAGES_COUNT + $VIDEO_COUNT + $OTHER_COUNT))
 RUNNING_COUNT=0
 
+pushd $DESTDIR
 ROOTFOLDER="media"
 IMAGEFOLDER="$ROOTFOLDER/images"
 VIDEOFOLDER="$ROOTFOLDER/videos"
