@@ -7,20 +7,24 @@ progress() {
 cpfile() {	
 	if [ "$TEST" == true ]; then
 		cp --attributes-only $1 $2 >/dev/null 2>&1
-	else	
-        cp $1 $2 2>&1
+	else
+        # To speed up, only copy if file doesnt exist or has a size of zero.
+        # We could use copy -n, to not overwrite files, but if test
+        # function has been used, empty files will exist.
+        if [[ ! -f "$2" || $(du "$2" | awk '{print $2}' ) == 0 ]]; then 
+            cp "$1" "$2" 2>&1
+        fi
 	fi
 }
 
 CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
 
-while getopts s:d:t option
+while getopts r:t option
 do
         case "$option"
         in
             r) ROOTDIR="${OPTARG}/";;
             t) TEST=true;;
-		
         esac
 done
 
@@ -47,36 +51,34 @@ mkdir -p $VIDEODIR
 mkdir -p $MISCDIR
 
 echo ""
-echo "Pre-transfer count of files in $DESTDIR: $(find $DESTDIR -type f | wc -l)"
+echo "Pre-transfer count of files in $DESTDIR/$ROOTDIR: $(find $DESTDIR/$ROOTDIR -type f | wc -l)"
 
-IFS=';'
-
-for file in "${SOURCEFILES[@]}"
+for filePath in "${SOURCEFILES[@]}"
 do
-    FILE=${file##*/}
-    CREATEDATE=$(grep -oE "$CREATEDATESTRING" <<< $IMAGE)
-    if date -d $CREATEDATE >/dev/null 2>&1
+    fileName=${filePath##*/}
+    createDate=$(grep -oE "$CREATEDATESTRING" <<< $fileName)
+    if date -d $createDate >/dev/null 2>&1
     then
-        month=$(date -d $CREATEDATE '+%b')
-        year=$(date -d $CREATEDATE '+%Y')
+        month=$(date -d $createDate '+%b')
+        year=$(date -d $createDate '+%Y')
 
-        if [[ $file =~ .*\.(jpg|gif|png|jpeg) ]]
+        if [[ $fileName =~ .*\.(jpg|gif|png|jpeg) ]]
         then
-            dir="$IMAGEDIR/$YEAR/$MONTH"
-        elif [[ $file =~ .*\.(mp4) ]]
+            dir="$IMAGEDIR/$year/$month"
+        elif [[ $fileName =~ .*\.(mp4) ]]
         then
-            dir="$VIDEODIR/$YEAR/$MONTH"
+            dir="$VIDEODIR/$year/$month"
         else
             dir="$MISCDIR"
         fi
         mkdir -p $dir
-        cpfile $file $dir
+        cpfile "$filePath" "$dir/$fileName"
     else
-        cpfile $file "$MISCDIR"
+        cpfile "$filePath" "$MISCDIR/$fileName"
     fi
     ((RUNNING_COUNT++))
-    progress $RUNNING_COUNT $TOTAL_COUNT ${file##*/}
+    progress $RUNNING_COUNT $TOTAL_COUNT $fileName
 done
 
-echo -e "\nPost-transfer count of files in $DESTDIR""media/"": $(find $DESTDIR -type f | wc -l)"
+echo -e "\nPost-transfer count of files in $DESTDIR/$ROOTDIR: $(find $DESTDIR/$ROOTDIR -type f | wc -l)"
 echo ""
