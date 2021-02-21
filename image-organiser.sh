@@ -1,87 +1,81 @@
 #!/bin/bash
 
-ROOTDIR="."
-CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
-while getopts s:d:t option
-do
-        case "${option}"
-        in
-                s) ROOTDIR=${OPTARG};;
-		d) DESTDIR=${OPTARG};;
-                t) TEST=true;;
-		
-        esac
-done
-
 progress() {
-	echo -en "\r$1/$2 files processed..."
+	echo -en "\r$1/$2 files processed... ($3)"
 }
 
 cpfile() {	
 	if [ "$TEST" == true ]; then
 		cp --attributes-only $1 $2 >/dev/null 2>&1
 	else	
-		cp $1 $2 >/dev/null 2>&1
+        cp $1 $2 2>&1
 	fi
 }
 
-IMAGES=$(find $ROOTDIR -regex ".*\.\(jpg\|gif\|png\|jpeg\)" -printf '%p;')
-VIDEOS=$(find $ROOTDIR -regex ".*\.\(mp4\)" -printf '%p;')
-OTHER=$(find $ROOTDIR -not -regex ".*\.\(jpg\|gif\|png\|jpeg\|mp4\)" -type f -printf '%p;' | tail -n +2)
+CREATEDATESTRING="(20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})"
 
-#IMAGES_COUNT=${#IMAGES[@]}
-IMAGES_COUNT=$(echo $IMAGES | sed 's/;/\n/g' | head -n -1 | wc -l)
-VIDEO_COUNT=$(echo $VIDEOS | sed 's/;/\n/g' | head -n -1 | wc -l)
-OTHER_COUNT=$(echo $OTHER | sed 's/;/\n/g' | head -n -1 | wc -l)
+while getopts s:d:t option
+do
+        case "$option"
+        in
+            r) ROOTDIR="${OPTARG}/";;
+            t) TEST=true;;
+		
+        esac
+done
 
-TOTAL_COUNT=$(($IMAGES_COUNT + $VIDEO_COUNT + $OTHER_COUNT))
+if [ $(( $# - $OPTIND + 1 )) != 2 ]; then
+    echo "Usage: `basename $0` [options] SOURCEDIRECTORY DESTINATIONDIRECTORY"
+    exit 1
+fi
+
+SOURCEDIR=${@:$OPTIND:1}
+DESTDIR=${@:$OPTIND+1:1}
+
+readarray -d '' SOURCEFILES < <(find $SOURCEDIR -type f -print0)
+
+TOTAL_COUNT=${#SOURCEFILES[@]}
+
 RUNNING_COUNT=0
 
-pushd $DESTDIR 1>/dev/null
-ROOTFOLDER="media"
-IMAGEFOLDER="$ROOTFOLDER/images"
-VIDEOFOLDER="$ROOTFOLDER/videos"
-MISCFOLDER="$ROOTFOLDER/misc"
+IMAGEDIR="$DESTDIR/${ROOTDIR}images"
+VIDEODIR="$DESTDIR/${ROOTDIR}videos"
+MISCDIR="$DESTDIR/${ROOTDIR}misc"
 
-mkdir -p $IMAGEFOLDER
-mkdir -p $VIDEOFOLDER
-mkdir -p $MISCFOLDER
+mkdir -p $IMAGEDIR
+mkdir -p $VIDEODIR
+mkdir -p $MISCDIR
 
 echo ""
-echo "Pre-transfer count of files in $DESTDIR""media/"": $(find $DESTDIR -type f | wc -l)"
+echo "Pre-transfer count of files in $DESTDIR: $(find $DESTDIR -type f | wc -l)"
 
 IFS=';'
 
-for i in $IMAGES
+for file in "${SOURCEFILES[@]}"
 do
-	IMAGE=${i##*/}
-	CREATEDATE=$(grep -oE "$CREATEDATESTRING" <<< $IMAGE)
-	if date -d $CREATEDATE >/dev/null 2>&1
-	then
-		MONTH=$(date -d $CREATEDATE '+%b')
-		YEAR=$(date -d $CREATEDATE '+%Y')
-		FOLDER="$IMAGEFOLDER/$YEAR/$MONTH"
-		mkdir -p $FOLDER
-		cpfile $i $FOLDER
-	else
-		cpfile $i "$MISCFOLDER"
-	fi
-	((RUNNING_COUNT++))
-	progress $RUNNING_COUNT $TOTAL_COUNT
-done
+    FILE=${file##*/}
+    CREATEDATE=$(grep -oE "$CREATEDATESTRING" <<< $IMAGE)
+    if date -d $CREATEDATE >/dev/null 2>&1
+    then
+        month=$(date -d $CREATEDATE '+%b')
+        year=$(date -d $CREATEDATE '+%Y')
 
-for i in $VIDEOS
-do
-	cpfile $i "$VIDEOFOLDER"
-	((RUNNING_COUNT++))
-	progress $RUNNING_COUNT $TOTAL_COUNT
-done
-
-for i in $OTHER
-do
-	cpfile $i "$MISCFOLDER"
-	((RUNNING_COUNT++))
-	progress $RUNNING_COUNT $TOTAL_COUNT
+        if [[ $file =~ .*\.(jpg|gif|png|jpeg) ]]
+        then
+            dir="$IMAGEDIR/$YEAR/$MONTH"
+        elif [[ $file =~ .*\.(mp4) ]]
+        then
+            dir="$VIDEODIR/$YEAR/$MONTH"
+        else
+            dir="$MISCDIR"
+        fi
+        mkdir -p $dir
+        cpfile $file $dir
+    else
+        cpfile $file "$MISCDIR"
+    fi
+    ((RUNNING_COUNT++))
+    progress $RUNNING_COUNT $TOTAL_COUNT ${file##*/}
 done
 
 echo -e "\nPost-transfer count of files in $DESTDIR""media/"": $(find $DESTDIR -type f | wc -l)"
