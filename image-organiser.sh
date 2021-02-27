@@ -80,5 +80,7 @@ do
     progress $RUNNING_COUNT $TOTAL_COUNT $fileName
 done
 
-echo -e "\nPost-transfer count of files in $DESTDIR/$ROOTDIR: $(find $DESTDIR/$ROOTDIR -type f | wc -l)"
+echo -e "\nPost-transfer count of files in $DESTDIR/$ROOTDIR: $(find $DESTDIR/$ROOTDIR -type f | wc -l)\n"
+echo -e "\nPerforming rudimentary check of files found in $SOURCEDIR and not found in $DESTDIR/$ROOTDIR (expect 0)..."
+diff <(find $SOURCEDIR -type f -exec basename \{} \; | sort) <(find $DESTDIR/$ROOTDIR -type f -exec basename \{} \; | sort) | grep '^<' | wc -l
 echo ""
