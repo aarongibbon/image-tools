@@ -48,5 +48,9 @@ class ImageFile:
         logging.info(f"Extracting date from filename for {self.filepath}")
         create_date = re.search(self.CREATE_DATE_REGEX, self.filepath)
         if create_date:
-            return dateutil.parser.parse(create_date.group()).date()
+            try:
+                return dateutil.parser.parse(create_date.group()).date()
+            except dateutil.parser.ParserError:
+                logging.error(f"Invalid date {create_date} found in {self.filepath}")
+                return None
         return None

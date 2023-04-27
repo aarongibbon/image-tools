@@ -18,13 +18,12 @@ path = pathlib.Path('./')
 
 images = []
 
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.ERROR)
 
 # PIL.Image requires relative paths
 src=os.path.relpath(argv[1])
 dest=argv[2]
 
-print(argv[1])
 for file in path.glob(f"{src}/**/*"):
     if file.suffix in file_types:
         if os.path.getsize(file) == 0:
