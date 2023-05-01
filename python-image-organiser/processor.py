@@ -6,6 +6,9 @@ import logging
 import os
 from datetime import date
 from sys import exit
+
+logging.basicConfig(level=logging.ERROR)
+
 def should_process(image):
     create_date = image.create_date
     if not create_date:
@@ -26,8 +29,6 @@ file_types = {'.jpg', '.gif', '.png', '.jpeg'}
 path = pathlib.Path('./')
 
 images = []
-
-logging.basicConfig(level=logging.ERROR)
 
 # PIL.Image requires relative paths
 src=os.path.relpath(argv[1])
