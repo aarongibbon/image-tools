@@ -5,13 +5,22 @@ from PIL import Image, UnidentifiedImageError
 import logging
 import os
 from datetime import date
-
+from sys import exit
 def should_process(image):
     create_date = image.create_date
     if not create_date:
         return False
     elif create_date.year > date.today().year:
         return False
+
+def dest_checks(directory):
+    if not os.path.isdir(dest):
+        logging.error(f"Destination directory {directory} does not exist, exiting")
+        return False
+    if not os.access(directory, os.W_OK):
+        logging.error(f"Destination directory {directory} is not writeable with current user, exiting")
+        return False
+    return True
 
 file_types = {'.jpg', '.gif', '.png', '.jpeg'}
 path = pathlib.Path('./')
@@ -23,6 +32,9 @@ logging.basicConfig(level=logging.ERROR)
 # PIL.Image requires relative paths
 src=os.path.relpath(argv[1])
 dest=argv[2]
+
+if not dest_checks(dest):
+    exit(1)
 
 for file in path.glob(f"{src}/**/*"):
     if file.suffix in file_types:
