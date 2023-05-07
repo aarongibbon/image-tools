@@ -9,7 +9,6 @@ import os
 
 class ImageFile:
 
-    #CREATE_DATE_REGEX=r'20[0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2}'
     CREATE_DATE_REGEX=r'20\d{2}-?(0[1-9]|1[012])-?(0[1-9]|[12][0-9]|3[01])'
     EXIF_DATETIME_FORMAT='%Y:%m:%d %H:%M:%S'
     EXIF_DATE_FORMAT='%Y:%m:%d'

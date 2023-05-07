@@ -1,4 +1,5 @@
 import pathlib
+import filecmp
 from image import ImageFile
 from sys import argv
 from PIL import Image, UnidentifiedImageError
@@ -6,6 +7,7 @@ import logging
 import os
 from datetime import date
 from sys import exit
+from shutil import copy2
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -49,7 +51,15 @@ for file in path.glob(f"{src}/**/*"):
 for image in images:
     create_date = image.create_date
     if not create_date:
-        dest_file = f"{dest}/misc/{image.filename}"
+        dest_dir = f"{dest}/misc"
     else:
-        dest_file = f"{dest}/{create_date.year}/{create_date.month}/{create_date.day}/{image.filename}"
-    print(dest_file)
+        dest_dir = f"{dest}/{create_date.year}/{create_date.month}"
+    
+    try:
+        same = filecmp.cmp(image.filepath, f"{dest_dir}/{image.filename}", shallow=True)
+    except FileNotFoundError:
+        same = False
+
+    if not same:
+        os.makedirs(dest_dir, exist_ok=True)
+        copy2(image.filepath, f"{dest_dir}/{image.filename}")
