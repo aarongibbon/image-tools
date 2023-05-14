@@ -8,6 +8,7 @@ import os
 from datetime import date
 from sys import exit
 from shutil import copy2
+from directorystats import Directory
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -18,14 +19,21 @@ def should_process(image):
     elif create_date.year > date.today().year:
         return False
 
-def dest_checks(directory):
-    if not os.path.isdir(dest):
-        logging.error(f"Destination directory {directory} does not exist, exiting")
-        return False
-    if not os.access(directory, os.W_OK):
-        logging.error(f"Destination directory {directory} is not writeable with current user, exiting")
-        return False
-    return True
+def directory_checks(source, destination):
+    return_value = True
+    if not source:
+        logging.error(f"Source directory {source.dir} does not exist")
+        return_value = False
+    if not source.is_readable:
+        logging.error(f"Source directory {source.dir} is not readable with current user")
+        return_value = False
+    if not destination:
+        logging.error(f"Destination directory {destination.dir} does not exist")
+        return_value = False
+    if not destination.is_writeable:
+        logging.error(f"Destination directory {destination.dir} is not writeable with current user")
+        return_value = False
+    return return_value
 
 file_types = {'.jpg', '.gif', '.png', '.jpeg'}
 path = pathlib.Path('./')
@@ -33,10 +41,11 @@ path = pathlib.Path('./')
 images = []
 
 # PIL.Image requires relative paths
-src=os.path.relpath(argv[1])
-dest=argv[2]
+src=Directory(os.path.relpath(argv[1]))
+dest=Directory(argv[2])
 
-if not dest_checks(dest):
+if not directory_checks(src, dest):
+    logging.error(f"There was an issue with the target directories, exiting")
     exit(1)
 
 for file in path.glob(f"{src}/**/*"):
@@ -46,7 +55,6 @@ for file in path.glob(f"{src}/**/*"):
             continue
         with Image.open(file) as image:
             images.append(ImageFile(image))
-
 
 for image in images:
     create_date = image.create_date
