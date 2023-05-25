@@ -9,9 +9,7 @@ class Directory():
         #TODO Add checks to see if directory exists
 
     def __bool__(self):
-        if os.path.isdir(self.dir):
-            return True
-        return False
+        return os.path.isdir(self.dir)
 
     @property
     def file_count(self):
@@ -19,12 +17,8 @@ class Directory():
 
     @property
     def is_writeable(self):
-        if os.access(self.dir, os.W_OK):
-            return True
-        return False
+        return os.access(self.dir, os.W_OK)
 
     @property
     def is_readable(self):
-        if os.access(self.dir, os.R_OK):
-            return True
-        return False
+        return os.access(self.dir, os.R_OK)

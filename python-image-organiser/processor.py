@@ -10,7 +10,8 @@ from sys import exit
 from shutil import copy2
 from directorystats import Directory
 
-logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 def should_process(image):
     create_date = image.create_date
@@ -22,16 +23,16 @@ def should_process(image):
 def directory_checks(source, destination):
     return_value = True
     if not source:
-        logging.error(f"Source directory {source.dir} does not exist")
+        logger.error(f"Source directory {source.dir} does not exist")
         return_value = False
     if not source.is_readable:
-        logging.error(f"Source directory {source.dir} is not readable with current user")
+        logger.error(f"Source directory {source.dir} is not readable with current user")
         return_value = False
     if not destination:
-        logging.error(f"Destination directory {destination.dir} does not exist")
+        logger.error(f"Destination directory {destination.dir} does not exist")
         return_value = False
     if not destination.is_writeable:
-        logging.error(f"Destination directory {destination.dir} is not writeable with current user")
+        logger.error(f"Destination directory {destination.dir} is not writeable with current user")
         return_value = False
     return return_value
 
@@ -45,13 +46,13 @@ src=Directory(os.path.relpath(argv[1]))
 dest=Directory(argv[2])
 
 if not directory_checks(src, dest):
-    logging.error(f"There was an issue with the target directories, exiting")
+    logger.error(f"There was an issue with the target directories, exiting")
     exit(1)
 
-for file in path.glob(f"{src}/**/*"):
+for file in path.glob(f"{src.dir}/**/*"):
     if file.suffix in file_types:
         if os.path.getsize(file) == 0:
-            logging.error(f"File {file} has size 0 bytes, not processing")
+            logger.error(f"File {file} has size 0 bytes, not processing")
             continue
         with Image.open(file) as image:
             images.append(ImageFile(image))
@@ -59,10 +60,10 @@ for file in path.glob(f"{src}/**/*"):
 for image in images:
     create_date = image.create_date
     if not create_date:
-        dest_dir = f"{dest}/misc"
+        dest_dir = f"{dest.dir}/misc"
     else:
-        dest_dir = f"{dest}/{create_date.year}/{create_date.month}"
-    
+        dest_dir = f"{dest.dir}/{create_date.year}/{create_date.month}"
+
     try:
         same = filecmp.cmp(image.filepath, f"{dest_dir}/{image.filename}", shallow=True)
     except FileNotFoundError:

@@ -1,6 +1,7 @@
 from image import ImageFile
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, call
+from testing_utils import get_mock_logger
 
 class MockImage():
     filename: str = None
@@ -17,16 +18,22 @@ class MockStatResult():
 def mock_image():
     return MockImage()
 
+@pytest.fixture()
+def mock_logger():
+    with patch('image.logger') as mock_logger:
+        yield mock_logger
+
 @pytest.fixture
 def non_zero_size():
     with patch("os.stat", return_value=MockStatResult(10)):
         yield
 
-def test_noexif_invalid_date_19991231dotjpg(non_zero_size, mock_image):
+def test_noexif_invalid_date_19991231dotjpg(mock_logger, non_zero_size, mock_image):
     """ Test date below year 2000 """
     mock_image.filename = "19991231.jpg"
     image = ImageFile(mock_image)
     assert image.create_date is None
+    mock_logger.info.assert_has_calls([call('Processing image 19991231.jpg'), call('Extracting date from filename for 19991231.jpg')])
 
 def test_noexif_valid_date_20000101dotjpg(non_zero_size, mock_image):
     """ Test date within year 2000 """
@@ -55,3 +62,11 @@ def test_noexif_invalid_date_20070229dotjpg(non_zero_size, mock_image):
     mock_image.filename = "20070229.jpg"
     image = ImageFile(mock_image)
     assert image.create_date is None
+
+def test_exif_valid_date_20000101dotjpg(non_zero_size, mock_image):
+    mock_image.filename = "20000101.jpg"
+    mock_image.exif_data = {ImageFile.EXIF_DATETIME_KEY: "2000:01:01 17:00:00"}
+    image = ImageFile(mock_image)
+    assert image.create_date.year == 2000
+    assert image.create_date.month == 1
+    assert image.create_date.day == 1
