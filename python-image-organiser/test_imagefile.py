@@ -29,11 +29,12 @@ def non_zero_size():
         yield
 
 def test_noexif_invalid_date_19991231dotjpg(mock_logger, non_zero_size, mock_image):
-    """ Test date below year 2000 """
+    """ Test valid date but below year 2000 """
     mock_image.filename = "19991231.jpg"
     image = ImageFile(mock_image)
     assert image.create_date is None
     mock_logger.info.assert_has_calls([call('Processing image 19991231.jpg'), call('Extracting date from filename for 19991231.jpg')])
+    mock_logger.error.assert_has_calls([call('No date found in 19991231.jpg with CREATE_DATE_REGEX')])
 
 def test_noexif_valid_date_20000101dotjpg(non_zero_size, mock_image):
     """ Test date within year 2000 """

@@ -55,6 +55,7 @@ class ImageFile:
             try:
                 return dateutil.parser.parse(create_date.group()).date()
             except dateutil.parser.ParserError:
-                logger.error(f"Invalid date {create_date} found in {self.filepath}")
+                logger.error(f"Invalid date {create_date.group()} found in {self.filepath}, cannot parse")
                 return None
+        logger.error(f"No date found in {self.filepath} with CREATE_DATE_REGEX")
         return None
