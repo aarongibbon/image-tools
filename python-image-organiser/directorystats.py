@@ -9,6 +9,7 @@ class Directory():
         #TODO Add checks to see if directory exists
 
     def __bool__(self):
+        # should we be using self.directory.is_dir instead?
         return os.path.isdir(self.dir)
 
     @property

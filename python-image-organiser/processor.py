@@ -36,39 +36,40 @@ def directory_checks(source, destination):
         return_value = False
     return return_value
 
-file_types = {'.jpg', '.gif', '.png', '.jpeg'}
-path = pathlib.Path('./')
+if __name__ == '__main__':
+    file_types = {'.jpg', '.gif', '.png', '.jpeg'}
+    path = pathlib.Path('./')
 
-images = []
+    images = []
 
-# PIL.Image requires relative paths
-src=Directory(os.path.relpath(argv[1]))
-dest=Directory(argv[2])
+    # PIL.Image requires relative paths
+    src=Directory(os.path.relpath(argv[1]))
+    dest=Directory(argv[2])
 
-if not directory_checks(src, dest):
-    logger.error(f"There was an issue with the target directories, exiting")
-    exit(1)
+    if not directory_checks(src, dest):
+        logger.error(f"There was an issue with the target directories, exiting")
+        exit(1)
 
-for file in path.glob(f"{src.dir}/**/*"):
-    if file.suffix in file_types:
-        if os.path.getsize(file) == 0:
-            logger.error(f"File {file} has size 0 bytes, not processing")
-            continue
-        with Image.open(file) as image:
-            images.append(ImageFile(image))
+    for file in path.glob(f"{src.dir}/**/*"):
+        if file.suffix in file_types:
+            if os.path.getsize(file) == 0:
+                logger.error(f"File {file} has size 0 bytes, not processing")
+                continue
+            with Image.open(file) as image:
+                images.append(ImageFile(image))
 
-for image in images:
-    create_date = image.create_date
-    if not create_date:
-        dest_dir = f"{dest.dir}/misc"
-    else:
-        dest_dir = f"{dest.dir}/{create_date.year}/{create_date.month}"
+    for image in images:
+        create_date = image.create_date
+        if not create_date:
+            dest_dir = f"{dest.dir}/misc"
+        else:
+            dest_dir = f"{dest.dir}/{create_date.year}/{create_date.month}"
 
-    try:
-        same = filecmp.cmp(image.filepath, f"{dest_dir}/{image.filename}", shallow=True)
-    except FileNotFoundError:
-        same = False
+        try:
+            same = filecmp.cmp(image.filepath, f"{dest_dir}/{image.filename}", shallow=True)
+        except FileNotFoundError:
+            same = False
 
-    if not same:
-        os.makedirs(dest_dir, exist_ok=True)
-        copy2(image.filepath, f"{dest_dir}/{image.filename}")
+        if not same:
+            os.makedirs(dest_dir, exist_ok=True)
+            copy2(image.filepath, f"{dest_dir}/{image.filename}")

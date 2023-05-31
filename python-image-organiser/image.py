@@ -1,4 +1,3 @@
-from PIL import Image
 from PIL.ExifTags import TAGS
 import re
 from datetime import datetime
