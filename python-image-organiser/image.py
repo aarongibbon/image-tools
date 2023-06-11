@@ -20,7 +20,6 @@ class ImageFile:
     def __init__(self, image):
         self.filepath = image.filename
         self.filename = self.filepath.split("/")[-1]
-        logger.info(f"Processing image {self.filename}")
         self.exif_data = self.get_exif_data(image)
         self.create_date = self.get_create_date()
         self.size = os.path.getsize(self.filepath)
@@ -44,7 +43,7 @@ class ImageFile:
         create_date = self.exif_data.get('DateTime') # do we need to consider DateTimeOriginal here?
         if not create_date:
             return self.extract_date_from_filename()
-        logger.info('Getting date from exif data')
+        logger.info(f"Getting date from exif data for {self.filepath}")
         return datetime.strptime(create_date.split(" ")[0], self.EXIF_DATE_FORMAT).date()
         
     def extract_date_from_filename(self):

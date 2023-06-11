@@ -1,12 +1,11 @@
 import pathlib
 import filecmp
 from image import ImageFile
-from sys import argv
 from PIL import Image, UnidentifiedImageError
 import logging
 import os
 from datetime import date
-from sys import exit
+from sys import exit, argv
 from shutil import copy2
 from directorystats import Directory
 
@@ -36,27 +35,33 @@ def directory_checks(source, destination):
         return_value = False
     return return_value
 
-if __name__ == '__main__':
+def process(src_root, dest_root):
     file_types = {'.jpg', '.gif', '.png', '.jpeg'}
     path = pathlib.Path('./')
 
     images = []
 
     # PIL.Image requires relative paths
-    src=Directory(os.path.relpath(argv[1]))
-    dest=Directory(argv[2])
+    src=Directory(os.path.relpath(src_root))
+    dest=Directory(dest_root)
 
     if not directory_checks(src, dest):
         logger.error(f"There was an issue with the target directories, exiting")
         exit(1)
 
-    for file in path.glob(f"{src.dir}/**/*"):
-        if file.suffix in file_types:
-            if os.path.getsize(file) == 0:
-                logger.error(f"File {file} has size 0 bytes, not processing")
-                continue
-            with Image.open(file) as image:
-                images.append(ImageFile(image))
+    src_files = [file for file in src.directory.glob("**/*") if file.is_file()]
+    dest_files = [file for file in src.directory.glob("**/*") if file.is_file()]
+
+    for file in src_files:
+        logger.info(f"Processing file {os.path.abspath(file)}")
+        if file.suffix not in file_types:
+            logger.info(f"Ignoring {file} as suffix not in {file_types}")
+            continue
+        if os.path.getsize(file) == 0:
+            logger.error(f"Ignoring {file} as it has size 0 bytes")
+            continue
+        with Image.open(file) as image:
+            images.append(ImageFile(image))
 
     for image in images:
         create_date = image.create_date
@@ -73,3 +78,6 @@ if __name__ == '__main__':
         if not same:
             os.makedirs(dest_dir, exist_ok=True)
             copy2(image.filepath, f"{dest_dir}/{image.filename}")
+
+if __name__ == '__main__':
+    process(argv[1], argv[2])
