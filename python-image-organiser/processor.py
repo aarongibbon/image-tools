@@ -35,6 +35,9 @@ def directory_checks(source, destination):
         return_value = False
     return return_value
 
+def find_files(root):
+    return [file for file in root.directory.glob("**/*") if file.is_file()]
+
 def process(src_root, dest_root):
     file_types = {'.jpg', '.gif', '.png', '.jpeg'}
     path = pathlib.Path('./')
@@ -49,16 +52,17 @@ def process(src_root, dest_root):
         logger.error(f"There was an issue with the target directories, exiting")
         exit(1)
 
-    src_files = [file for file in src.directory.glob("**/*") if file.is_file()]
-    dest_files = [file for file in src.directory.glob("**/*") if file.is_file()]
+    src_files = find_files(src)
+    dest_files = find_files(dest)
 
     for file in src_files:
-        logger.info(f"Processing file {os.path.abspath(file)}")
+        absolute_path = os.path.abspath(file)
+        logger.info(f"Processing file {absolute_path}")
         if file.suffix not in file_types:
-            logger.info(f"Ignoring {file} as suffix not in {file_types}")
+            logger.info(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
             continue
         if os.path.getsize(file) == 0:
-            logger.error(f"Ignoring {file} as it has size 0 bytes")
+            logger.error(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
         with Image.open(file) as image:
             images.append(ImageFile(image))
@@ -68,16 +72,22 @@ def process(src_root, dest_root):
         if not create_date:
             dest_dir = f"{dest.dir}/misc"
         else:
-            dest_dir = f"{dest.dir}/{create_date.year}/{create_date.month}"
+            dest_dir = f"{dest.dir}/{create_date.year}/{create_date.strftime('%b')}"
+
+        dest_file = f"{dest_dir}/{image.filename}"
 
         try:
-            same = filecmp.cmp(image.filepath, f"{dest_dir}/{image.filename}", shallow=True)
+            same = filecmp.cmp(image.filepath, dest_file, shallow=True)
         except FileNotFoundError:
             same = False
+        logger.info(same)
+        if same:
+            logger.info(f"Not copying {image.filepath} as {dest_file} exists and is the same")
+            continue
 
-        if not same:
-            os.makedirs(dest_dir, exist_ok=True)
-            copy2(image.filepath, f"{dest_dir}/{image.filename}")
+        logger.info(f"Copying {image.filepath} to {dest_file}")
+        os.makedirs(dest_dir, exist_ok=True)
+        copy2(image.filepath, dest_file)
 
 if __name__ == '__main__':
     process(argv[1], argv[2])
