@@ -62,7 +62,7 @@ def process(src_root, dest_root):
             logger.info(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
             continue
         if os.path.getsize(file) == 0:
-            logger.error(f"Ignoring {absolute_path} as it has size 0 bytes")
+            logger.info(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
         with Image.open(file) as image:
             images.append(ImageFile(image))

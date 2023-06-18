@@ -91,11 +91,22 @@ def test_dest_file_exists_and_not_same(caplog, tmp_path):
 
 
 def test_invalid_suffix(caplog, tmp_path):
-    open(tmp_path / "hello.xyz", "a").close()
+    open(tmp_path / "invalidsuffix.xyz", "a").close()
 
     processor.process(tmp_path, tmp_path)
 
     assert_has_logs(caplog.messages,
                     [
-                        f"Ignoring {tmp_path}/hello.xyz as suffix .xyz not valid"
+                        f"Ignoring {tmp_path}/invalidsuffix.xyz as suffix .xyz not valid"
+                    ])
+
+
+def test_image_with_0_bytes(caplog, tmp_path):
+    open(tmp_path / "emptyfile.jpg", "a").close()
+
+    processor.process(tmp_path, tmp_path)
+
+    assert_has_logs(caplog.messages,
+                    [
+                        f"Ignoring {tmp_path}/emptyfile.jpg as it has size 0 bytes"
                     ])
