@@ -4,11 +4,17 @@ from testing_utils import assert_has_logs, assert_not_logged
 from unittest.mock import patch
 from logging import INFO
 import pytest
+from os.path import isfile
+from directorystats import Directory
 
 @pytest.fixture
-def caplog(caplog, autouse=True):
+def caplog(caplog):
     caplog.set_level(INFO)
     return caplog
+
+@pytest.fixture
+def dest_dir(tmp_path):
+    return Directory(tmp_path / "dest_dir")
 
 def generate_test_files(root_dir, files):
     (root_dir / "src_dir").mkdir()
@@ -26,7 +32,7 @@ def generate_test_files(root_dir, files):
         image.save(file, exif=exif)
 
 
-def test_basic_flow(caplog, tmp_path):
+def test_basic_flow(caplog, tmp_path, dest_dir):
     """ Test getting date from filename and from exif data """
     files = {
         "src_dir/fun_dir/20210707.jpg": {"exif_data": {306: "2021:07:07 00:00:00"}},
@@ -46,6 +52,9 @@ def test_basic_flow(caplog, tmp_path):
                         f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg",
                         f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"
                     ])
+    assert dest_dir.file_count == 2
+    assert isfile(f"{tmp_path}/dest_dir/2021/Jul/20210707.jpg")
+    assert isfile(f"{tmp_path}/dest_dir/2023/Aug/20230809.jpg")
 
 
 def test_dest_file_exists_and_same(caplog, tmp_path):
