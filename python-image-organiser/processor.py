@@ -64,8 +64,7 @@ def process(src_root, dest_root):
         if os.path.getsize(file) == 0:
             logger.info(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
-        with Image.open(file) as image:
-            images.append(ImageFile(image))
+        images.append(ImageFile(file))
 
     for image in images:
         create_date = image.create_date
@@ -77,17 +76,17 @@ def process(src_root, dest_root):
         dest_file = f"{dest_dir}/{image.filename}"
 
         try:
-            same = filecmp.cmp(image.filepath, dest_file, shallow=True)
+            same = filecmp.cmp(image.absolute_path, dest_file, shallow=True)
         except FileNotFoundError:
             same = False
         logger.info(same)
         if same:
-            logger.info(f"Not copying {image.filepath} as {dest_file} exists and is the same")
+            logger.info(f"Not copying {image.absolute_path} as {dest_file} exists and is the same")
             continue
 
-        logger.info(f"Copying {image.filepath} to {dest_file}")
+        logger.info(f"Copying {image.absolute_path} to {dest_file}")
         os.makedirs(dest_dir, exist_ok=True)
-        copy2(image.filepath, dest_file)
+        copy2(image.absolute_path, dest_file)
 
 if __name__ == '__main__':
     process(argv[1], argv[2])
