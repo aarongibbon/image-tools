@@ -48,7 +48,7 @@ def test_basic_flow(caplog, tmp_path, dest_dir):
                         f"Processing file {tmp_path}/src_dir/fun_dir/20210707.jpg",
                         f"Getting date from exif data for {tmp_path}/src_dir/fun_dir/20210707.jpg",
                         f"Processing file {tmp_path}/src_dir/20230809.jpg",
-                        f"Extracting date from filename for {tmp_path}/src_dir/20230809.jpg",
+                        f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg",
                         f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg",
                         f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"
                     ])

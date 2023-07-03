@@ -73,7 +73,7 @@ def process(src_root, dest_root):
         else:
             dest_dir = f"{dest.dir}/{create_date.year}/{create_date.strftime('%b')}"
 
-        dest_file = f"{dest_dir}/{image.filename}"
+        dest_file = f"{dest_dir}/{image.name}"
 
         try:
             same = filecmp.cmp(image.absolute_path, dest_file, shallow=True)
