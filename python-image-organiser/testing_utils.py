@@ -9,7 +9,10 @@ def assert_has_logs(actual_logs: list, logs: list):
 
 
 def assert_not_logged(actual_logs: list, logs: list):
+    check = True
+    was_logged = []
     for log in logs:
         if log in actual_logs:
-            return False
-    return True
+            was_logged.append(log)
+            check = False
+    assert check, f"Expected these logs to not be logged but they were: {was_logged}"

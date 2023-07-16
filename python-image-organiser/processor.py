@@ -1,7 +1,7 @@
 import pathlib
 import filecmp
 from image import ImageFile
-from PIL import Image, UnidentifiedImageError
+from video import VideoFile
 import logging
 import os
 from datetime import date
@@ -12,8 +12,8 @@ from directorystats import Directory
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def should_process(image):
-    create_date = image.create_date
+def should_process(file):
+    create_date = file.create_date
     if not create_date:
         return False
     elif create_date.year > date.today().year:
@@ -39,13 +39,12 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 def process(src_root, dest_root):
-    file_types = {'.jpg', '.gif', '.png', '.jpeg'}
-    path = pathlib.Path('./')
+    file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
 
-    images = []
+    valid_files = []
 
     # PIL.Image requires relative paths
-    src=Directory(os.path.relpath(src_root))
+    src=Directory(src_root)
     dest=Directory(dest_root)
 
     if not directory_checks(src, dest):
@@ -58,35 +57,38 @@ def process(src_root, dest_root):
     for file in src_files:
         absolute_path = os.path.abspath(file)
         logger.info(f"Processing file {absolute_path}")
-        if file.suffix not in file_types:
+        if file.suffix not in file_types.keys():
             logger.info(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
             continue
         if os.path.getsize(file) == 0:
             logger.info(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
-        images.append(ImageFile(file))
+        file_class = file_types.get(file.suffix)
+        valid_files.append(file_class(file))
 
-    for image in images:
-        create_date = image.create_date
+    for file in valid_files:
+        create_date = file.create_date
         if not create_date:
             dest_dir = f"{dest.dir}/misc"
         else:
             dest_dir = f"{dest.dir}/{create_date.year}/{create_date.strftime('%b')}"
 
-        dest_file = f"{dest_dir}/{image.name}"
+        dest_file = f"{dest_dir}/{file.name}"
 
         try:
-            same = filecmp.cmp(image.absolute_path, dest_file, shallow=True)
+            same = filecmp.cmp(file.absolute_path, dest_file, shallow=True)
         except FileNotFoundError:
             same = False
         logger.info(same)
         if same:
-            logger.info(f"Not copying {image.absolute_path} as {dest_file} exists and is the same")
+            logger.info(f"Not copying {file.absolute_path} as {dest_file} exists and is the same")
             continue
 
-        logger.info(f"Copying {image.absolute_path} to {dest_file}")
+        logger.info(f"Copying {file.absolute_path} to {dest_file}")
         os.makedirs(dest_dir, exist_ok=True)
-        copy2(image.absolute_path, dest_file)
+        copy2(file.absolute_path, dest_file)
 
 if __name__ == '__main__':
+    # TODO: Add dry run option
+    # TODO: Use argsparse or something with a helper function
     process(argv[1], argv[2])
