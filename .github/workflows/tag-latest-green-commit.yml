@@ -13,13 +13,13 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4
     - name: Install Python Packages
-      run:
+      run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt 
     - name: Run Pytest
       run: pytest
     - name: Tag if Pytest Passed
       if: success()
-      run:
+      run: |
         git tag latest -f
         git push origin latest
