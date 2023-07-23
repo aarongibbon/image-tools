@@ -1,16 +1,18 @@
-import pathlib
+import argparse
 import filecmp
-from image import ImageFile
-from video import VideoFile
 import logging
 import os
 from datetime import date
-from sys import exit, argv
 from shutil import copy2
+from sys import argv, exit
+
 from directorystats import Directory
+from image import ImageFile
+from video import VideoFile
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 def should_process(file):
     create_date = file.create_date
@@ -18,6 +20,7 @@ def should_process(file):
         return False
     elif create_date.year > date.today().year:
         return False
+
 
 def directory_checks(source, destination):
     return_value = True
@@ -35,8 +38,10 @@ def directory_checks(source, destination):
         return_value = False
     return return_value
 
+
 def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
+
 
 def process(src_root, dest_root):
     file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
@@ -44,8 +49,8 @@ def process(src_root, dest_root):
     valid_files = []
 
     # PIL.Image requires relative paths
-    src=Directory(src_root)
-    dest=Directory(dest_root)
+    src = Directory(src_root)
+    dest = Directory(dest_root)
 
     if not directory_checks(src, dest):
         logger.error(f"There was an issue with the target directories, exiting")
@@ -87,6 +92,7 @@ def process(src_root, dest_root):
         logger.info(f"Copying {file.absolute_path} to {dest_file}")
         os.makedirs(dest_dir, exist_ok=True)
         copy2(file.absolute_path, dest_file)
+
 
 if __name__ == '__main__':
     # TODO: Add dry run option

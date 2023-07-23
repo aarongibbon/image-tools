@@ -1,12 +1,13 @@
-import pathlib
 import os
+import pathlib
+
 
 class Directory():
 
     def __init__(self, directory):
         self.dir = directory
         self.directory = pathlib.Path(directory)
-        #TODO Add checks to see if directory exists
+        # TODO Add checks to see if directory exists
 
     def __bool__(self):
         # should we be using self.directory.is_dir instead?

@@ -1,16 +1,14 @@
-from PIL.ExifTags import TAGS
-from PIL import Image
-import re
-from datetime import datetime
-import dateutil.parser
 import logging
-import os
 import sys
+
 from generic_file import GenericFile
+from PIL import Image
+from PIL.ExifTags import TAGS
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
+
 
 class ImageFile(GenericFile):
 

@@ -1,11 +1,12 @@
-from PIL import Image
-import processor
-from testing_utils import assert_has_logs, assert_not_logged
-from unittest.mock import patch
 from logging import INFO
-import pytest
 from os.path import isfile
+from unittest.mock import patch
+
+import processor
+import pytest
 from directorystats import Directory
+from PIL import Image
+from testing_utils import assert_has_logs, assert_not_logged
 
 
 @pytest.fixture
@@ -89,8 +90,8 @@ def test_dest_file_exists_and_same(caplog, tmp_path):
 
 def test_dest_file_exists_and_not_same(caplog, tmp_path):
     files = {
-        "src_dir/20230809.jpg": {"size":20},
-        "dest_dir/2023/Aug/20230809.jpg": {"size":10}
+        "src_dir/20230809.jpg": {"size": 20},
+        "dest_dir/2023/Aug/20230809.jpg": {"size": 10}
     }
 
     generate_test_files(tmp_path, files)
@@ -103,9 +104,9 @@ def test_dest_file_exists_and_not_same(caplog, tmp_path):
                     ])
 
     assert_not_logged(caplog.messages,
-                    [
-                        f"Not copying {tmp_path}/src_dir/20230809.jpg as {tmp_path}/dest_dir/2023/Aug/20230809.jpg exists and is the same"
-                    ])
+                      [
+                          f"Not copying {tmp_path}/src_dir/20230809.jpg as {tmp_path}/dest_dir/2023/Aug/20230809.jpg exists and is the same"
+                      ])
 
 
 def test_invalid_suffix(caplog, tmp_path):
