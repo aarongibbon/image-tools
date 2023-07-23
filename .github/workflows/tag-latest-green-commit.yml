@@ -20,4 +20,6 @@ jobs:
       run: pytest
     - name: Tag if Pytest Passed
       if: success()
-      run: git tag latest
+      run:
+        git tag latest -f
+        git push origin latest
