@@ -15,7 +15,9 @@ class Directory():
 
     @property
     def file_count(self):
-        return len([file for file in self.directory.glob("**/*") if file.is_file()])
+        if self.__bool__():
+            return len([file for file in self.directory.glob("**/*") if file.is_file()])
+        return None
 
     @property
     def is_writeable(self):

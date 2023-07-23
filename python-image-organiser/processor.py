@@ -43,7 +43,7 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 
-def process(src_root, dest_root):
+def process(src_root, dest_root, dry_run=False):
     file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
 
     valid_files = []
@@ -90,11 +90,20 @@ def process(src_root, dest_root):
             continue
 
         logger.info(f"Copying {file.absolute_path} to {dest_file}")
-        os.makedirs(dest_dir, exist_ok=True)
-        copy2(file.absolute_path, dest_file)
+        if not dry_run:
+            os.makedirs(dest_dir, exist_ok=True)
+            copy2(file.absolute_path, dest_file)
 
 
 if __name__ == '__main__':
     # TODO: Add dry run option
     # TODO: Use argsparse or something with a helper function
-    process(argv[1], argv[2])
+    parser = argparse.ArgumentParser(
+        prog='Media Organiser', description='A program for organising media files by year and month')
+    parser.add_argument('-s', '--source', required=True)
+    parser.add_argument('-d', '--destination', required=True)
+    parser.add_argument('--dry-run', action='store_true', default=False,
+                        required=False, help="Dont create directories or copy files", dest="dry_run")
+    args = parser.parse_args()
+
+    process(args.source, args.destination, args.dry_run)

@@ -15,16 +15,15 @@ def caplog(caplog):
     return caplog
 
 
-@pytest.fixture
-def dest_dir(tmp_path):
-    return Directory(tmp_path / "dest_dir")
-
-
 def generate_test_files(root_dir, files):
-    (root_dir / "src_dir").mkdir()
-    (root_dir / "dest_dir").mkdir()
     for path_to_file, options in files.items():
+
         file = root_dir / path_to_file
+
+        if path_to_file.endswith("/"):
+            file.mkdir(parents=True, exist_ok=True)
+            continue
+
         file.parent.mkdir(parents=True, exist_ok=True)
         size = options.get("size", 1)
         mtime = options.get("mtime", None)
@@ -42,11 +41,12 @@ def generate_test_files(root_dir, files):
             image.save(file, exif=exif)
 
 
-def test_basic_flow(caplog, tmp_path, dest_dir):
+def test_basic_flow(caplog, tmp_path):
     """ Test getting date from filename and from exif data """
     files = {
         "src_dir/fun_dir/20210707.jpg": {"exif_data": {306: "2021:07:07 00:00:00"}},
-        "src_dir/20230809.jpg": {}
+        "src_dir/20230809.jpg": {},
+        "dest_dir/": {}
     }
 
     generate_test_files(tmp_path, files)
@@ -62,7 +62,7 @@ def test_basic_flow(caplog, tmp_path, dest_dir):
                         f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg",
                         f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"
                     ])
-    assert dest_dir.file_count == 2
+    assert Directory(tmp_path / "dest_dir").file_count == 2
     assert isfile(f"{tmp_path}/dest_dir/2021/Jul/20210707.jpg")
     assert isfile(f"{tmp_path}/dest_dir/2023/Aug/20230809.jpg")
 
@@ -131,9 +131,10 @@ def test_image_with_0_bytes(caplog, tmp_path):
                     ])
 
 
-def test_mp4_file(caplog, tmp_path, dest_dir):
+def test_mp4_file(caplog, tmp_path):
     files = {
-        "src_dir/20200101.mp4": {}
+        "src_dir/20200101.mp4": {},
+        "dest_dir/": {}
     }
 
     generate_test_files(tmp_path, files)
@@ -146,5 +147,28 @@ def test_mp4_file(caplog, tmp_path, dest_dir):
                         f"Extracting date from file name for {tmp_path}/src_dir/20200101.mp4",
                         f"Copying {tmp_path}/src_dir/20200101.mp4 to {tmp_path}/dest_dir/2020/Jan/20200101.mp4"
                     ])
-    assert dest_dir.file_count == 1
+    assert Directory(tmp_path / "dest_dir").file_count == 1
     assert isfile(f"{tmp_path}/dest_dir/2020/Jan/20200101.mp4")
+
+
+def test_dry_run(caplog, tmp_path):
+    files = {
+        "src_dir/20230809.jpg": {},
+        "dest_dir/": {}
+    }
+
+    generate_test_files(tmp_path, files)
+
+    processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", dry_run=True)
+
+    assert_has_logs(caplog.messages,
+                    [
+                        f"Processing file {tmp_path}/src_dir/20230809.jpg",
+                        f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg",
+                        f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"
+                    ])
+    assert Directory(tmp_path / "dest_dir").file_count == 0
+
+    # Double check that faulty test data isn't the reason the above check passes
+    processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", dry_run=False)
+    assert Directory(tmp_path / "dest_dir").file_count == 1
