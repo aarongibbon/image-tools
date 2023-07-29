@@ -22,4 +22,4 @@ jobs:
       if: success()
       run: |
         git tag latest -f
-        git push origin latest
+        git push origin latest --force
