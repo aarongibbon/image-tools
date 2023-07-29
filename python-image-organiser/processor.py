@@ -43,7 +43,7 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 
-def process(src_root, dest_root, dry_run=False):
+def process(src_root, dest_root, dry_run=False, delete_source=False):
     file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
 
     valid_files = []
@@ -94,6 +94,11 @@ def process(src_root, dest_root, dry_run=False):
             os.makedirs(dest_dir, exist_ok=True)
             copy2(file.absolute_path, dest_file)
 
+        if delete_source:
+            logger.info(f"Deleting {file.absolute_path}")
+            if not dry_run:
+                os.remove(file.absolute_path)
+
 
 if __name__ == '__main__':
     # TODO: Add dry run option
@@ -103,7 +108,9 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--source', required=True)
     parser.add_argument('-d', '--destination', required=True)
     parser.add_argument('--dry-run', action='store_true', default=False,
-                        required=False, help="Dont create directories or copy files", dest="dry_run")
+                        required=False, help='Disables copying of files and directory creation', dest='dry_run')
+    parser.add_argument('--delete-source', action='store_true', default=False,
+                        required=False, help='Delete the source files after copying them', dest='delete_source')
     args = parser.parse_args()
 
-    process(args.source, args.destination, args.dry_run)
+    process(args.source, args.destination, args.dry_run, args.delete_source)

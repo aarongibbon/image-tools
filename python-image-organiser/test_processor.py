@@ -172,3 +172,41 @@ def test_dry_run(caplog, tmp_path):
     # Double check that faulty test data isn't the reason the above check passes
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", dry_run=False)
     assert Directory(tmp_path / "dest_dir").file_count == 1
+
+
+def test_deleting_source_true(caplog, tmp_path):
+    files = {
+        "src_dir/20230809.jpg": {},
+        "dest_dir/": {}
+    }
+
+    generate_test_files(tmp_path, files)
+
+    assert Directory(tmp_path / "src_dir").file_count == 1
+
+    processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", dry_run=False, delete_source=True)
+
+    assert_has_logs(caplog.messages,
+                    [
+                        f"Processing file {tmp_path}/src_dir/20230809.jpg",
+                        f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg",
+                        f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg",
+                        f"Deleting {tmp_path}/src_dir/20230809.jpg"
+                    ])
+    assert Directory(tmp_path / "src_dir").file_count == 0
+
+
+def test_deleting_source_false(caplog, tmp_path):
+    files = {
+        "src_dir/20230809.jpg": {},
+        "dest_dir/": {}
+    }
+
+    generate_test_files(tmp_path, files)
+
+    assert Directory(tmp_path / "src_dir").file_count == 1
+
+    processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", dry_run=False, delete_source=False)
+
+    assert_not_logged(caplog.messages, ["Deleting {tmp_path}/src_dir/20230809.jpg"])
+    assert Directory(tmp_path / "src_dir").file_count == 1
