@@ -2,6 +2,7 @@ import argparse
 import filecmp
 import logging
 import os
+import sys
 from datetime import date
 from shutil import copy2
 from sys import argv, exit
@@ -12,6 +13,18 @@ from video import VideoFile
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+
+fh = logging.FileHandler('processor.log', mode='w')
+fh.setLevel(logging.INFO)
+fh.setFormatter(formatter)
+
+sh = logging.StreamHandler(sys.stdout)
+sh.setLevel(logging.INFO)
+sh.setFormatter(formatter)
+
+logger.addHandler(fh)
+logger.addHandler(sh)
 
 
 def should_process(file):
@@ -45,7 +58,6 @@ def find_files(root):
 
 def process(src_root, dest_root, dry_run=False, delete_source=False):
     file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
-
     valid_files = []
 
     # PIL.Image requires relative paths
@@ -68,8 +80,11 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
         if os.path.getsize(file) == 0:
             logger.info(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
+        if '/@eaDir/' in str(file):
+            logger.info(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
+            continue
         file_class = file_types.get(file.suffix)
-        valid_files.append(file_class(file))
+        valid_files.append(file_class(file, logger))
 
     for file in valid_files:
         create_date = file.create_date
@@ -84,7 +99,7 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
             same = filecmp.cmp(file.absolute_path, dest_file, shallow=True)
         except FileNotFoundError:
             same = False
-        logger.info(same)
+
         if same:
             logger.info(f"Not copying {file.absolute_path} as {dest_file} exists and is the same")
             continue

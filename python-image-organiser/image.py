@@ -12,13 +12,12 @@ logger.addHandler(handler)
 
 class ImageFile(GenericFile):
 
-    def __init__(self, file_path):
-        super().__init__(file_path)
+    def __init__(self, file_path, logger):
+        super().__init__(file_path, logger)
 
     def get_meta_data(self):
         # See: https://pillow.readthedocs.io/en/stable/reference/open_files.html#image-lifecycle
         image = Image.open(self.relative_path)
-        image.close()
         return_exif_data = {}
         exif_data = image.getexif()
         for tag_id in exif_data:
@@ -29,4 +28,5 @@ class ImageFile(GenericFile):
             if isinstance(data, bytes):
                 data = data.decode()
             return_exif_data[tag] = data
+        image.close()
         return return_exif_data

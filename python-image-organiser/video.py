@@ -12,5 +12,5 @@ logger.addHandler(handler)
 
 class VideoFile(GenericFile):
 
-    def __init__(self, file_path):
-        super().__init__(file_path)
+    def __init__(self, file_path, logger):
+        super().__init__(file_path, logger)
