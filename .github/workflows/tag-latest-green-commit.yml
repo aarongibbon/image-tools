@@ -24,7 +24,7 @@ jobs:
       run: pytest
 
     - name: Build docker
-      run: docker build -t .
+      run: docker build .
 
     - name: Tag if all green
       run: |
