@@ -1,4 +1,4 @@
 #!/bin/bash
-pushd ~/code/
+pushd /tmp/code/
 git pull
-git checkout latest
+git checkout refine-entrypoint-file
