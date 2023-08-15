@@ -29,6 +29,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - uses: actions/checkout@v3
+
       - name: Tag if all green
         run: |
           git tag latest -f
