@@ -12,7 +12,6 @@ from image import ImageFile
 from video import VideoFile
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 
 fh = logging.FileHandler('processor.log', mode='w')
@@ -75,13 +74,13 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
         absolute_path = os.path.abspath(file)
         logger.info(f"Processing file {absolute_path}")
         if file.suffix not in file_types.keys():
-            logger.info(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
+            logger.warning(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
             continue
         if os.path.getsize(file) == 0:
-            logger.info(f"Ignoring {absolute_path} as it has size 0 bytes")
+            logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
         if '/@eaDir/' in str(file):
-            logger.info(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
+            logger.warning(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
             continue
         file_class = file_types.get(file.suffix)
         valid_files.append(file_class(file, logger))
