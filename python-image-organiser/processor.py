@@ -7,22 +7,21 @@ from datetime import date
 from shutil import copy2
 from sys import argv, exit
 
+from custom_log_formatters import (CustomStdoutEmailFormatter,
+                                   CustomStdoutFormatter)
 from directorystats import Directory
 from image import ImageFile
 from video import VideoFile
 
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 
-fh = logging.FileHandler('processor.log', mode='w')
-fh.setLevel(logging.INFO)
-fh.setFormatter(formatter)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = CustomStdoutFormatter(base_log_format)
 
 sh = logging.StreamHandler(sys.stdout)
-sh.setLevel(logging.INFO)
 sh.setFormatter(formatter)
 
-logger.addHandler(fh)
 logger.addHandler(sh)
 
 
@@ -125,6 +124,11 @@ if __name__ == '__main__':
                         required=False, help='Disables copying of files and directory creation', dest='dry_run')
     parser.add_argument('--delete-source', action='store_true', default=False,
                         required=False, help='Delete the source files after copying them', dest='delete_source')
+    parser.add_argument('-e', action='store_true', default=False,
+                        required=False, help='Format output logs for email', dest='email_format')
     args = parser.parse_args()
+
+    if args.email_format:
+        sh.setFormatter(CustomStdoutEmailFormatter(base_log_format))
 
     process(args.source, args.destination, args.dry_run, args.delete_source)
