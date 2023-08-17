@@ -123,11 +123,11 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
             if not dry_run:
                 os.remove(file.absolute_path)
 
-        post_src_count = src.file_count
-        post_dest_count = dest.file_count
+    post_src_count = src.file_count
+    post_dest_count = dest.file_count
 
-        logger.info(f"Source contained {pre_src_count} files before processing and {post_src_count} after")
-        logger.info(f"Destination contained {pre_dest_count} files before processing and {post_dest_count} after")
+    logger.info(f"Source contained {pre_src_count} files before processing and {post_src_count} after")
+    logger.info(f"Destination contained {pre_dest_count} files before processing and {post_dest_count} after")
 
 
 if __name__ == '__main__':
