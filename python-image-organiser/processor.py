@@ -84,6 +84,9 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
     src = Directory(src_root)
     dest = Directory(dest_root)
 
+    pre_src_count = src.file_count
+    pre_dest_count = dest.file_count
+
     if not directory_checks(src, dest):
         logger.error(f"There was an issue with the target directories, exiting")
         exit(1)
@@ -119,6 +122,12 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
             logger.info(f"Deleting {file.absolute_path}")
             if not dry_run:
                 os.remove(file.absolute_path)
+
+        post_src_count = src.file_count
+        post_dest_count = dest.file_count
+
+        logger.info(f"Source contained {pre_src_count} files before processing and {post_src_count} after")
+        logger.info(f"Destination contained {pre_dest_count} files before processing and {post_dest_count} after")
 
 
 if __name__ == '__main__':

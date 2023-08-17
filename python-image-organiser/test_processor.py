@@ -60,9 +60,10 @@ def test_basic_flow(caplog, tmp_path):
                         f"Processing file {tmp_path}/src_dir/20230809.jpg",
                         f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg",
                         f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg",
-                        f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"
+                        f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg",
+                        f"Source contained 2 files before processing and 2 after",
+                        f"Destination contained 0 files before processing and 2 after"
                     ])
-    assert Directory(tmp_path / "dest_dir").file_count == 2
     assert isfile(f"{tmp_path}/dest_dir/2021/Jul/20210707.jpg")
     assert isfile(f"{tmp_path}/dest_dir/2023/Aug/20230809.jpg")
 
@@ -191,9 +192,10 @@ def test_deleting_source_true(caplog, tmp_path):
                         f"Processing file {tmp_path}/src_dir/20230809.jpg",
                         f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg",
                         f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg",
-                        f"Deleting {tmp_path}/src_dir/20230809.jpg"
+                        f"Deleting {tmp_path}/src_dir/20230809.jpg",
+                        f"Source contained 1 files before processing and 0 after",
+                        f"Destination contained 0 files before processing and 1 after"
                     ])
-    assert Directory(tmp_path / "src_dir").file_count == 0
 
 
 def test_deleting_source_false(caplog, tmp_path):
