@@ -57,6 +57,14 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 
+def contains_illegal_pattern(path: str):
+    for illegal_pattern in illegal_patterns:
+        if illegal_pattern in path:
+            logger.warning(f"Ignoring {path} as it contains illegal pattern {illegal_pattern}")
+            return True
+    return False
+
+
 def return_valid_files(files):
     valid_files = []
     for file in files:
@@ -68,10 +76,8 @@ def return_valid_files(files):
         if os.path.getsize(file) == 0:
             logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
-        for illegal_pattern in illegal_patterns:
-            if illegal_pattern in str(absolute_path):
-                logger.warning(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
-                continue
+        if contains_illegal_pattern(str(absolute_path)):
+            continue
         file_class = file_types.get(file.suffix)
         valid_files.append(file_class(file, logger))
     return valid_files
