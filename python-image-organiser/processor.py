@@ -3,6 +3,7 @@ import filecmp
 import logging
 import os
 import sys
+import traceback
 from datetime import date
 from shutil import copy2
 from sys import argv, exit
@@ -65,21 +66,27 @@ def contains_illegal_pattern(path: str):
     return False
 
 
-def return_valid_files(files):
+def return_valid_files(file_paths):
     valid_files = []
-    for file in files:
-        absolute_path = os.path.abspath(file)
+    for file_path in file_paths:
+        absolute_path = os.path.abspath(file_path)
         logger.info(f"Processing file {absolute_path}")
-        if file.suffix not in file_types.keys():
-            logger.warning(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
+        if file_path.suffix not in file_types.keys():
+            logger.warning(f"Ignoring {absolute_path} as suffix {file_path.suffix} not valid")
             continue
-        if os.path.getsize(file) == 0:
+        if os.path.getsize(file_path) == 0:
             logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
         if contains_illegal_pattern(str(absolute_path)):
             continue
-        file_class = file_types.get(file.suffix)
-        valid_files.append(file_class(file, logger))
+        file_class = file_types.get(file_path.suffix)
+        try:
+            file = file_class(file_path, logger)
+        except Exception:
+            logger.critical(f"There was an error creating file object for {file_path}: {traceback.format_exc()}")
+            continue
+
+        valid_files.append(file)
     return valid_files
 
 

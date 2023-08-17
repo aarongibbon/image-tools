@@ -5,7 +5,8 @@ class CustomStdoutFormatter(logging.Formatter):
 
     COLOURS = {
         logging.WARNING: "\x1b[33;20m",
-        logging.ERROR: "\x1b[31;20m"
+        logging.ERROR: "\x1b[31;20m",
+        logging.CRITICAL: "\x1b[31;20m"
     }
 
     RESET = "\x1b[0m"
@@ -22,7 +23,8 @@ class CustomStdoutEmailFormatter(logging.Formatter):
 
     COLOURS = {
         logging.WARNING: "yellow",
-        logging.ERROR: "red"
+        logging.ERROR: "red",
+        logging.CRITICAL: "red"
     }
 
     RESET = "</span>"
