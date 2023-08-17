@@ -69,7 +69,7 @@ def return_valid_files(files):
             logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
             continue
         for illegal_pattern in illegal_patterns:
-            if illegal_pattern in absolute_path:
+            if illegal_pattern in str(absolute_path):
                 logger.warning(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
                 continue
         file_class = file_types.get(file.suffix)

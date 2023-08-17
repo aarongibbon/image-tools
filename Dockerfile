@@ -1,4 +1,5 @@
 FROM python:slim-buster
+LABEL name=media_organiser
 ENV REPO https://github.com/aarongibbon/image-tools.git
 ENV REPO_TAG latest
 RUN apt-get update && apt-get install -y \
