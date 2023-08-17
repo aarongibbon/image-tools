@@ -11,7 +11,6 @@ class CustomStdoutFormatter(logging.Formatter):
     RESET = "\x1b[0m"
 
     def format(self, record):
-
         colour = self.COLOURS.get(record.levelno, None)
         if colour:
             fmt = logging.Formatter(colour+self._fmt+self.RESET)

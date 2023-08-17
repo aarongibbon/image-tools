@@ -13,6 +13,9 @@ from directorystats import Directory
 from image import ImageFile
 from video import VideoFile
 
+file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
+illegal_patterns = ['/@eaDir/']
+
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 
 logger = logging.getLogger(__name__)
@@ -54,8 +57,27 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 
+def return_valid_files(files):
+    valid_files = []
+    for file in files:
+        absolute_path = os.path.abspath(file)
+        logger.info(f"Processing file {absolute_path}")
+        if file.suffix not in file_types.keys():
+            logger.warning(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
+            continue
+        if os.path.getsize(file) == 0:
+            logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
+            continue
+        for illegal_pattern in illegal_patterns:
+            if illegal_pattern in absolute_path:
+                logger.warning(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
+                continue
+        file_class = file_types.get(file.suffix)
+        valid_files.append(file_class(file, logger))
+    return valid_files
+
+
 def process(src_root, dest_root, dry_run=False, delete_source=False):
-    file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
     valid_files = []
 
     # PIL.Image requires relative paths
@@ -67,22 +89,8 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
         exit(1)
 
     src_files = find_files(src)
-    dest_files = find_files(dest)
 
-    for file in src_files:
-        absolute_path = os.path.abspath(file)
-        logger.info(f"Processing file {absolute_path}")
-        if file.suffix not in file_types.keys():
-            logger.warning(f"Ignoring {absolute_path} as suffix {file.suffix} not valid")
-            continue
-        if os.path.getsize(file) == 0:
-            logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
-            continue
-        if '/@eaDir/' in str(file):
-            logger.warning(f"Ignoring {absolute_path} as it contains illegal pattern '/@eaDir/'")
-            continue
-        file_class = file_types.get(file.suffix)
-        valid_files.append(file_class(file, logger))
+    valid_files = return_valid_files(src_files)
 
     for file in valid_files:
         create_date = file.create_date
