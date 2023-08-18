@@ -14,7 +14,8 @@ from directorystats import Directory
 from image import ImageFile
 from video import VideoFile
 
-file_types = {'.jpg': ImageFile, '.gif': ImageFile, '.png': ImageFile, '.jpeg': ImageFile, '.mp4': VideoFile}
+file_types = {'.jpg': ImageFile, '.jpeg': ImageFile, '.JPG': ImageFile,
+              '.gif': ImageFile, '.png': ImageFile, '.mp4': VideoFile}
 illegal_patterns = ['/@eaDir/']
 
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
