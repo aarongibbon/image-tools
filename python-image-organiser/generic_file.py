@@ -15,7 +15,7 @@ class GenericFile:
 
     # Overwrite these as needed in classes that inherit from this one
     CREATE_DATE_REGEX = r'20\d{2}-?(0[1-9]|1[012])-?(0[1-9]|[12][0-9]|3[01])'
-    META_DATA_DATETIME_KEY = 'DateTime'  # do we need to consider DateTimeOriginal for Image files here?
+    META_DATA_DATETIME_KEY = 'DateTime'
     META_DATA_DATETIME_FORMAT = '%Y:%m:%d %H:%M:%S'
     META_DATA_DATE_FORMAT = '%Y:%m:%d'
 
