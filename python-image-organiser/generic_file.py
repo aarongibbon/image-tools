@@ -15,7 +15,7 @@ class GenericFile:
 
     # Overwrite these as needed in classes that inherit from this one
     CREATE_DATE_REGEX = r'20\d{2}-?(0[1-9]|1[012])-?(0[1-9]|[12][0-9]|3[01])'
-    META_DATA_DATETIME_KEY = 'DateTime'
+    META_DATA_DATETIME_KEY = 'date_time'
     META_DATA_DATETIME_FORMAT = '%Y:%m:%d %H:%M:%S'
     META_DATA_DATE_FORMAT = '%Y:%m:%d'
 
@@ -34,11 +34,17 @@ class GenericFile:
         # TODO write docstring
         return {}
 
+    def decode_bytes(self, data):
+        try:
+            return data.decode()
+        except UnicodeDecodeError:
+            return None
+
     def get_create_date(self):
         create_date = self.meta_data.get(self.META_DATA_DATETIME_KEY)
         if not create_date:
             return self.extract_date_from_file_name()
-        self.logger.info(f"Getting date from exif data for {self.absolute_path}")
+        self.logger.info(f"Getting date from meta data for {self.absolute_path}")
         return datetime.strptime(create_date.split(" ")[0], self.META_DATA_DATE_FORMAT).date()
 
     def extract_date_from_file_name(self):

@@ -5,7 +5,8 @@ from PIL.ExifTags import TAGS
 
 class ImageFile(GenericFile):
 
-    META_DATA_DATETIME_KEY = 'DateTimeOriginal'
+    DATETIME_ORIGINAL_TAG_ID = 36867
+    DATETIME_TAG_ID = 306
     TAG_IDS = [
         36867  # DateTimeOriginal
     ]
@@ -19,17 +20,24 @@ class ImageFile(GenericFile):
         return_exif_data = {}
         exif_data = image.getexif()
 
-        for tag_id in self.TAG_IDS:
-            tag = TAGS.get(tag_id, tag_id)
-            data = exif_data.get(tag_id, None)
+        date_time = exif_data.get(self.DATETIME_ORIGINAL_TAG_ID, None)
 
-            if isinstance(data, bytes):
-                try:
-                    data = data.decode()
-                except UnicodeDecodeError:
-                    self.logger.error(f"Failed to decode tag {tag} in exif data for {self.absolute_path}")
-                    continue
-            return_exif_data[tag] = data
+        # Fall back to DateTime
+        if not date_time:
+            self.logger.info(
+                f"Could not find DateTimeOriginal in exif data for {self.absolute_path}, trying DateTime instead")
+            date_time = exif_data.get(self.DATETIME_TAG_ID, None)
+            if not date_time:
+                self.logger.info(f"Could not find DateTime in exif data for {self.absolute_path}")
+
+        if isinstance(date_time, bytes):
+            date_time = self.decode_bytes(date_time)
+            if not date_time:
+                self.logger.error(f"Failed to decode date time meta data for {self.absolute_path}")
+
+        if date_time:
+            return_exif_data[self.META_DATA_DATETIME_KEY] = date_time
 
         image.close()
+        self.logger.info(return_exif_data)
         return return_exif_data
