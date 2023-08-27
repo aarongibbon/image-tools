@@ -39,5 +39,4 @@ class ImageFile(GenericFile):
             return_exif_data[self.META_DATA_DATETIME_KEY] = date_time
 
         image.close()
-        self.logger.info(return_exif_data)
         return return_exif_data
