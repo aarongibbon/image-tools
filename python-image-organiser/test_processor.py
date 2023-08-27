@@ -43,6 +43,7 @@ def generate_test_files(root_dir, files):
 
 def test_basic_flow(caplog, tmp_path):
     """ Test getting date from filename and from exif data """
+    # TODO: Test when a file doesnt contain a valid date
     files = {
         "src_dir/fun_dir/20210707.jpg": {"exif_data": {36867: "2021:07:07 00:00:00"}},
         "src_dir/20230809.jpg": {},

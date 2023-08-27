@@ -5,7 +5,7 @@ import pathlib
 class Directory():
 
     def __init__(self, directory):
-        self.dir = directory
+        self.dir = str(directory).rstrip("/")
         self.directory = pathlib.Path(directory)
         # TODO Add checks to see if directory exists
 

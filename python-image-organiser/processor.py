@@ -112,7 +112,7 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
     for file in valid_files:
         create_date = file.create_date
         if not create_date:
-            dest_dir = f"{dest.dir}/misc"
+            dest_dir = f"{dest.dir}/unorganized"
         else:
             dest_dir = f"{dest.dir}/{create_date.year}/{create_date.strftime('%b')}"
 

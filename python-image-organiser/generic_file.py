@@ -50,5 +50,5 @@ class GenericFile:
             except dateutil.parser.ParserError:
                 self.logger.error(f"Invalid date {create_date.group()} found in {self.absolute_path}, cannot parse")
                 return None
-        self.logger.error(f"No date found in {self.name} with CREATE_DATE_REGEX")
+        self.logger.error(f"No date found in name of file at {self.absolute_path} with CREATE_DATE_REGEX")
         return None
