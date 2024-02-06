@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 import traceback
-from datetime import date
+from datetime import date, datetime
 from shutil import copy2
 from sys import argv, exit
 
@@ -20,14 +20,21 @@ illegal_patterns = ['/@eaDir/']
 
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 
+log_directory = "/tmp/image_processor_log"
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-formatter = CustomStdoutFormatter(base_log_format)
 
+formatter = CustomStdoutFormatter(base_log_format)
 sh = logging.StreamHandler(sys.stdout)
 sh.setFormatter(formatter)
-
 logger.addHandler(sh)
+
+os.makedirs(log_directory, exist_ok=True)
+fh = logging.FileHandler(f"{log_directory}/image_processor_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+fh.setLevel(logging.INFO)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 
 def should_process(file):
@@ -161,5 +168,6 @@ if __name__ == '__main__':
 
     if args.email_format:
         sh.setFormatter(CustomStdoutEmailFormatter(base_log_format))
+        sh.setLevel(logging.ERROR)
 
     process(args.source, args.destination, args.dry_run, args.delete_source)
