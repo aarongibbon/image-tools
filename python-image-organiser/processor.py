@@ -19,6 +19,7 @@ file_types = {'.jpg': ImageFile, '.jpeg': ImageFile, '.JPG': ImageFile,
 illegal_patterns = ['/@eaDir/']
 
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
+base_log_formatter = logging.Formatter(base_log_format)
 
 log_directory = "/tmp/media_organiser_log"
 
@@ -33,7 +34,7 @@ logger.addHandler(sh)
 os.makedirs(log_directory, exist_ok=True)
 fh = logging.FileHandler(f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
 fh.setLevel(logging.INFO)
-fh.setFormatter(formatter)
+fh.setFormatter(base_log_formatter)
 logger.addHandler(fh)
 
 
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.email_format:
-        sh.setFormatter(CustomStdoutEmailFormatter(base_log_format))
+        sh.setFormatter(base_log_formatter)
         sh.setLevel(logging.ERROR)
 
     process(args.source, args.destination, args.dry_run, args.delete_source)
