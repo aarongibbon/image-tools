@@ -20,7 +20,7 @@ illegal_patterns = ['/@eaDir/']
 
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 
-log_directory = "/tmp/image_processor_log"
+log_directory = "/tmp/media_organiser_log"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -31,7 +31,7 @@ sh.setFormatter(formatter)
 logger.addHandler(sh)
 
 os.makedirs(log_directory, exist_ok=True)
-fh = logging.FileHandler(f"{log_directory}/image_processor_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+fh = logging.FileHandler(f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
 fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
