@@ -153,8 +153,6 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
 
 
 if __name__ == '__main__':
-    # TODO: Add dry run option
-    # TODO: Use argsparse or something with a helper function
     parser = argparse.ArgumentParser(
         prog='Media Organiser', description='A program for organising media files by year and month')
     parser.add_argument('-s', '--source', required=True)
