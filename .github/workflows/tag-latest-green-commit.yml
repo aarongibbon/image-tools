@@ -1,6 +1,9 @@
 name: Tag Latest Green Commit
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
 
