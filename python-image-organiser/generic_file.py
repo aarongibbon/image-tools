@@ -6,10 +6,6 @@ from datetime import datetime
 
 import dateutil.parser
 
-logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(handler)
-
 
 class GenericFile:
 

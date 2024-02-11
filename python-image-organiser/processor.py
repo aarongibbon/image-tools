@@ -22,21 +22,30 @@ illegal_patterns = ['/@eaDir/']
 base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 base_log_formatter = logging.Formatter(base_log_format)
 
-log_directory = "/tmp/media_organiser_log"
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+def define_logger():
+    base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
+    base_log_formatter = logging.Formatter(base_log_format)
 
-formatter = CustomStdoutFormatter(base_log_format)
-sh = logging.StreamHandler(sys.stdout)
-sh.setFormatter(formatter)
-logger.addHandler(sh)
+    log_directory = "/tmp/media_organiser_log"
 
-os.makedirs(log_directory, exist_ok=True)
-fh = logging.FileHandler(f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
-fh.setLevel(logging.INFO)
-fh.setFormatter(base_log_formatter)
-logger.addHandler(fh)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    formatter = CustomStdoutFormatter(base_log_format)
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setLevel(logging.INFO)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+    os.makedirs(log_directory, exist_ok=True)
+    fh = logging.FileHandler(
+        f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(base_log_formatter)
+    logger.addHandler(fh)
+
+    return logger
 
 
 def should_process(file):
@@ -47,7 +56,7 @@ def should_process(file):
         return False
 
 
-def directory_checks(source, destination):
+def directory_checks(source, destination, logger):
     return_value = True
     if not source:
         logger.error(f"Source directory {source.dir} does not exist")
@@ -68,14 +77,14 @@ def find_files(root):
     return [file for file in root.directory.glob("**/*") if file.is_file()]
 
 
-def contains_illegal_pattern(path: str):
+def contains_illegal_pattern(path: str, logger):
     for illegal_pattern in illegal_patterns:
         if illegal_pattern in path:
             return illegal_pattern
     return None
 
 
-def validate_files(file_paths):
+def validate_files(file_paths, logger):
     valid_files = []
     ignored_files = []
     invalid_suffixes = []
@@ -98,7 +107,7 @@ def validate_files(file_paths):
             ignored_files.append(absolute_path)
             continue
 
-        illegal_pattern = contains_illegal_pattern(str(absolute_path))
+        illegal_pattern = contains_illegal_pattern(str(absolute_path), logger)
 
         if illegal_pattern:
             logger.debug(f"Ignoring {absolute_path} as it contains illegal pattern {illegal_pattern}")
@@ -128,7 +137,7 @@ def validate_files(file_paths):
     return valid_files, ignored_files
 
 
-def process(src_root, dest_root, dry_run=False, delete_source=False, delete_ignored=False):
+def process(src_root, dest_root, logger, dry_run=False, delete_source=False, delete_ignored=False):
     valid_files = []
 
     # PIL.Image requires relative paths
@@ -138,13 +147,13 @@ def process(src_root, dest_root, dry_run=False, delete_source=False, delete_igno
     pre_src_count = src.file_count
     pre_dest_count = dest.file_count
 
-    if not directory_checks(src, dest):
+    if not directory_checks(src, dest, logger):
         logger.error(f"There was an issue with the target directories, exiting")
         exit(1)
 
     src_files = find_files(src)
 
-    valid_files, ignored_files = validate_files(src_files)
+    valid_files, ignored_files = validate_files(src_files, logger)
 
     for file in valid_files:
         create_date = file.create_date
@@ -208,8 +217,6 @@ if __name__ == '__main__':
                         required=False, help='Format output logs for email', dest='email_format')
     args = parser.parse_args()
 
-    if args.email_format:
-        sh.setFormatter(base_log_formatter)
-        sh.setLevel(logging.ERROR)
+    logger = define_logger()
 
-    process(args.source, args.destination, args.dry_run, args.delete_source, args.delete_ignored)
+    process(args.source, args.destination, logger, args.dry_run, args.delete_source, args.delete_ignored)
