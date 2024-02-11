@@ -24,16 +24,16 @@ class ImageFile(GenericFile):
 
         # Fall back to DateTime
         if not date_time:
-            self.logger.info(
+            self.logger.debug(
                 f"Could not find DateTimeOriginal in exif data for {self.absolute_path}, trying DateTime instead")
             date_time = exif_data.get(self.DATETIME_TAG_ID, None)
             if not date_time:
-                self.logger.info(f"Could not find DateTime in exif data for {self.absolute_path}")
+                self.logger.debug(f"Could not find DateTime in exif data for {self.absolute_path}")
 
         if isinstance(date_time, bytes):
             date_time = self.decode_bytes(date_time)
             if not date_time:
-                self.logger.error(f"Failed to decode date time meta data for {self.absolute_path}")
+                self.logger.debug(f"Failed to decode date time meta data for {self.absolute_path}")
 
         if date_time:
             return_exif_data[self.META_DATA_DATETIME_KEY] = date_time

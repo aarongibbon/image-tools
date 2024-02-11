@@ -44,17 +44,17 @@ class GenericFile:
         create_date = self.meta_data.get(self.META_DATA_DATETIME_KEY)
         if not create_date:
             return self.extract_date_from_file_name()
-        self.logger.info(f"Getting date from meta data for {self.absolute_path}")
+        self.logger.debug(f"Getting date from meta data for {self.absolute_path}")
         return datetime.strptime(create_date.split(" ")[0], self.META_DATA_DATE_FORMAT).date()
 
     def extract_date_from_file_name(self):
-        self.logger.info(f"Extracting date from file name for {self.absolute_path}")
+        self.logger.debug(f"Extracting date from file name for {self.absolute_path}")
         create_date = re.search(self.CREATE_DATE_REGEX, self.name)
         if create_date:
             try:
                 return dateutil.parser.parse(create_date.group()).date()
             except dateutil.parser.ParserError:
-                self.logger.error(f"Invalid date {create_date.group()} found in {self.absolute_path}, cannot parse")
+                self.logger.debug(f"Invalid date {create_date.group()} found in {self.absolute_path}, cannot parse")
                 return None
-        self.logger.error(f"No date found in name of file at {self.absolute_path} with CREATE_DATE_REGEX")
+        self.logger.debug(f"No date found in name of file at {self.absolute_path} with CREATE_DATE_REGEX")
         return None

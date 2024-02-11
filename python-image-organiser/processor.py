@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import traceback
+from collections import Counter
 from datetime import date, datetime
 from shutil import copy2
 from sys import argv, exit
@@ -70,25 +71,43 @@ def find_files(root):
 def contains_illegal_pattern(path: str):
     for illegal_pattern in illegal_patterns:
         if illegal_pattern in path:
-            logger.warning(f"Ignoring {path} as it contains illegal pattern {illegal_pattern}")
-            return True
-    return False
+            return illegal_pattern
+    return None
 
 
-def return_valid_files(file_paths):
+def validate_files(file_paths):
     valid_files = []
+    ignored_files = []
+    invalid_suffixes = []
+    illegal_patterns = []
+    empty_file_count = 0
+
     for file_path in file_paths:
         absolute_path = os.path.abspath(file_path)
-        logger.info(f"Processing file {absolute_path}")
+        logger.debug(f"Processing file {absolute_path}")
+
         if file_path.suffix not in file_types.keys():
-            logger.warning(f"Ignoring {absolute_path} as suffix {file_path.suffix} not valid")
+            logger.debug(f"Ignoring {absolute_path} as suffix {file_path.suffix} not valid")
+            invalid_suffixes.append(file_path.suffix)
+            ignored_files.append(absolute_path)
             continue
+
         if os.path.getsize(file_path) == 0:
-            logger.warning(f"Ignoring {absolute_path} as it has size 0 bytes")
+            logger.debug(f"Ignoring {absolute_path} as it has size 0 bytes")
+            empty_file_count += 1
+            ignored_files.append(absolute_path)
             continue
-        if contains_illegal_pattern(str(absolute_path)):
+
+        illegal_pattern = contains_illegal_pattern(str(absolute_path))
+
+        if illegal_pattern:
+            logger.debug(f"Ignoring {absolute_path} as it contains illegal pattern {illegal_pattern}")
+            illegal_patterns.append(illegal_pattern)
+            ignored_files.append(absolute_path)
             continue
+
         file_class = file_types.get(file_path.suffix)
+
         try:
             file = file_class(file_path, logger)
         except Exception:
@@ -96,10 +115,20 @@ def return_valid_files(file_paths):
             continue
 
         valid_files.append(file)
-    return valid_files
+
+    for invalid_suffix, count in Counter(invalid_suffixes).items():
+        logger.warning(f"Ignoring {count} files with an invalid suffix of {invalid_suffix}")
+
+    for illegal_pattern, count in Counter(illegal_patterns).items():
+        logger.warning(f"Ignoring {count} files containing illegal pattern {illegal_pattern}")
+
+    if empty_file_count > 0:
+        logger.warning(f"Ignoring {empty_file_count} files with 0 bytes")
+
+    return valid_files, ignored_files
 
 
-def process(src_root, dest_root, dry_run=False, delete_source=False):
+def process(src_root, dest_root, dry_run=False, delete_source=False, delete_ignored=False):
     valid_files = []
 
     # PIL.Image requires relative paths
@@ -115,10 +144,11 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
 
     src_files = find_files(src)
 
-    valid_files = return_valid_files(src_files)
+    valid_files, ignored_files = validate_files(src_files)
 
     for file in valid_files:
         create_date = file.create_date
+
         if not create_date:
             dest_dir = f"{dest.dir}/unorganised"
         else:
@@ -133,21 +163,32 @@ def process(src_root, dest_root, dry_run=False, delete_source=False):
 
         if same:
             logger.info(f"Not copying {file.absolute_path} as {dest_file} exists and is the same")
+            ignored_files.append(file.absolute_path)
             continue
 
         logger.info(f"Copying {file.absolute_path} to {dest_file}")
+
         if not dry_run:
             os.makedirs(dest_dir, exist_ok=True)
             copy2(file.absolute_path, dest_file)
 
         if delete_source:
-            logger.info(f"Deleting {file.absolute_path}")
+            logger.debug(f"Deleting {file.absolute_path}")
+
             if not dry_run:
                 os.remove(file.absolute_path)
+
+    for absolute_path in ignored_files:
+        if delete_ignored:
+            logger.debug(f"Deleting {absolute_path}")
+
+            if not dry_run:
+                os.remove(absolute_path)
 
     post_src_count = src.file_count
     post_dest_count = dest.file_count
 
+    logger.info(f"Ignored {len(ignored_files)} files")
     logger.info(f"Source contained {pre_src_count} files before processing and {post_src_count} after")
     logger.info(f"Destination contained {pre_dest_count} files before processing and {post_dest_count} after")
 
@@ -161,6 +202,8 @@ if __name__ == '__main__':
                         required=False, help='Disables copying of files and directory creation', dest='dry_run')
     parser.add_argument('--delete-source', action='store_true', default=False,
                         required=False, help='Delete the source files after copying them', dest='delete_source')
+    parser.add_argument('--delete-ignored-files', action='store_true', default=False,
+                        required=False, help='Delete any invalid/ignored files', dest='delete_ignored')
     parser.add_argument('-e', action='store_true', default=False,
                         required=False, help='Format output logs for email', dest='email_format')
     args = parser.parse_args()
@@ -169,4 +212,4 @@ if __name__ == '__main__':
         sh.setFormatter(base_log_formatter)
         sh.setLevel(logging.ERROR)
 
-    process(args.source, args.destination, args.dry_run, args.delete_source)
+    process(args.source, args.destination, args.dry_run, args.delete_source, args.delete_ignored)
