@@ -218,7 +218,7 @@ if __name__ == '__main__':
                         required=False, help='Disables copying of files and directory creation', dest='dry_run')
     parser.add_argument('--delete-source', action='store_true', default=False,
                         required=False, help='Delete the source files after copying them', dest='delete_source')
-    parser.add_argument('--delete-ignored-files', action='store_true', default=False,
+    parser.add_argument('--delete-ignored', action='store_true', default=False,
                         required=False, help='Delete any invalid/ignored files', dest='delete_ignored')
     parser.add_argument('-e', action='store_true', default=False,
                         required=False, help='Format output logs for email', dest='email_format')
