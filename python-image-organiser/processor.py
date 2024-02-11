@@ -23,7 +23,7 @@ base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
 base_log_formatter = logging.Formatter(base_log_format)
 
 
-def define_logger():
+def define_logger(clear_formatting=False):
     base_log_format = '%(asctime)s | %(levelname)s | %(message)s'
     base_log_formatter = logging.Formatter(base_log_format)
 
@@ -32,15 +32,18 @@ def define_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
-    formatter = CustomStdoutFormatter(base_log_format)
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(logging.INFO)
-    sh.setFormatter(formatter)
+
+    if clear_formatting:
+        sh.setFormatter(base_log_formatter)
+    else:
+        sh.setFormatter(CustomStdoutFormatter(base_log_format))
+
     logger.addHandler(sh)
 
     os.makedirs(log_directory, exist_ok=True)
-    fh = logging.FileHandler(
-        f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+    fh = logging.FileHandler(f"{log_directory}/media_organiser_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(base_log_formatter)
     logger.addHandler(fh)
@@ -220,10 +223,11 @@ if __name__ == '__main__':
                         required=False, help='Delete the source files after copying them', dest='delete_source')
     parser.add_argument('--delete-ignored', action='store_true', default=False,
                         required=False, help='Delete any invalid/ignored files', dest='delete_ignored')
-    parser.add_argument('-e', action='store_true', default=False,
-                        required=False, help='Format output logs for email', dest='email_format')
+    parser.add_argument('-c', action='store_true', default=False,
+                        required=False, help='Clear colour formatting on stdout logs', dest='clear_format')
+
     args = parser.parse_args()
 
-    logger = define_logger()
+    logger = define_logger(args.clear_format)
 
     process(args.source, args.destination, logger, args.dry_run, args.delete_source, args.delete_ignored)
