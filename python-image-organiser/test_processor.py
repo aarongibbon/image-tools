@@ -48,7 +48,7 @@ def test_basic_flow(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Processing file {tmp_path}/src_dir/20230809.jpg"),
         call(f"Could not find DateTimeOriginal in exif data for {tmp_path}/src_dir/20230809.jpg, trying DateTime instead"),
         call(f"Could not find DateTime in exif data for {tmp_path}/src_dir/20230809.jpg"),
@@ -56,13 +56,45 @@ def test_basic_flow(tmp_path):
         call(f"Processing file {tmp_path}/src_dir/fun_dir/20210707.jpg"),
         call(f"Getting date from meta data for {tmp_path}/src_dir/fun_dir/20210707.jpg"),
         call(f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"),
-        call(f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg"),
+        call(f"Copying {tmp_path}/src_dir/fun_dir/20210707.jpg to {tmp_path}/dest_dir/2021/Jul/20210707.jpg")
+    ])
+
+    mock_logger.info.assert_has_calls([
+        call("Ignored 0 files of which 0 were duplicates"),
+        call("Sent 0 files to the unorganised folder"),
         call(f"Source contained 2 files before processing and 2 after"),
         call(f"Destination contained 0 files before processing and 2 after")
     ])
 
     assert isfile(f"{tmp_path}/dest_dir/2021/Jul/20210707.jpg")
     assert isfile(f"{tmp_path}/dest_dir/2023/Aug/20230809.jpg")
+
+
+def test_valid_file_with_no_date_info(tmp_path):
+    files = {
+        "src_dir/myimage.jpg": {},
+        "dest_dir/": {}
+    }
+
+    generate_test_files(tmp_path, files)
+    mock_logger = Mock()
+    processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger)
+
+    mock_logger.debug.assert_has_calls([
+        call(f"Processing file {tmp_path}/src_dir/myimage.jpg"),
+        call(f"Could not find DateTimeOriginal in exif data for {tmp_path}/src_dir/myimage.jpg, trying DateTime instead"),
+        call(f"Could not find DateTime in exif data for {tmp_path}/src_dir/myimage.jpg"),
+        call(f"Extracting date from file name for {tmp_path}/src_dir/myimage.jpg"),
+        call(f"No date found in name of file at {tmp_path}/src_dir/myimage.jpg"),
+        call(f"Copying {tmp_path}/src_dir/myimage.jpg to {tmp_path}/dest_dir/unorganised/myimage.jpg")
+    ])
+
+    mock_logger.info.assert_has_calls([
+        call("Ignored 0 files of which 0 were duplicates"),
+        call("Sent 1 files to the unorganised folder"),
+        call(f"Source contained 1 files before processing and 1 after"),
+        call(f"Destination contained 0 files before processing and 1 after")
+    ])
 
 
 def test_dest_file_exists_and_same(tmp_path):
@@ -75,11 +107,18 @@ def test_dest_file_exists_and_same(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Not copying {tmp_path}/src_dir/20230809.jpg as {tmp_path}/dest_dir/2023/Aug/20230809.jpg exists and is the same"),
     ])
 
-    assert call(f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg") not in mock_logger.info.mock_calls
+    mock_logger.info.assert_has_calls([
+        call("Ignored 1 files of which 1 were duplicates"),
+        call("Sent 0 files to the unorganised folder"),
+        call(f"Source contained 1 files before processing and 1 after"),
+        call(f"Destination contained 1 files before processing and 1 after")
+    ])
+
+    assert call(f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg") not in mock_logger.debug.mock_calls
 
 
 def test_dest_file_exists_and_not_same(tmp_path):
@@ -92,30 +131,50 @@ def test_dest_file_exists_and_not_same(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg")
     ])
 
-    assert call(f"Not copying {tmp_path}/src_dir/20230809.jpg as {tmp_path}/dest_dir/2023/Aug/20230809.jpg exists and is the same") not in mock_logger.info.mock_calls
+    mock_logger.info.assert_has_calls([
+        call("Ignored 0 files of which 0 were duplicates"),
+        call("Sent 0 files to the unorganised folder"),
+        call(f"Source contained 1 files before processing and 1 after"),
+        call(f"Destination contained 1 files before processing and 1 after")
+    ])
+
+    assert call(f"Not copying {tmp_path}/src_dir/20230809.jpg as {tmp_path}/dest_dir/2023/Aug/20230809.jpg exists and is the same") not in mock_logger.debug.mock_calls
+    assert Directory(tmp_path / "dest_dir").file_count == 1
 
 
 def test_invalid_suffix(tmp_path):
+    #TODO This doesnt actually check that no files were copied
     open(tmp_path / "invalidsuffix.xyz", "a").close()
     mock_logger = Mock()
     processor.process(tmp_path, tmp_path, mock_logger)
 
-    mock_logger.warning.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Ignoring {tmp_path}/invalidsuffix.xyz as suffix .xyz not valid")
+    ])
+
+    mock_logger.info.assert_has_calls([
+        call("Ignored 1 files of which 0 were duplicates"),
+        call("Sent 0 files to the unorganised folder")
     ])
 
 
 def test_image_with_0_bytes(tmp_path):
+    #TODO This doesnt actually check that no files were copied
     open(tmp_path / "emptyfile.jpg", "a").close()
     mock_logger = Mock()
     processor.process(tmp_path, tmp_path, mock_logger)
 
-    mock_logger.warning.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Ignoring {tmp_path}/emptyfile.jpg as it has size 0 bytes")
+    ])
+
+    mock_logger.info.assert_has_calls([
+        call("Ignored 1 files of which 0 were duplicates"),
+        call("Sent 0 files to the unorganised folder")
     ])
 
 
@@ -129,7 +188,7 @@ def test_mp4_file(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Processing file {tmp_path}/src_dir/20200101.mp4"),
         call(f"Extracting date from file name for {tmp_path}/src_dir/20200101.mp4"),
         call(f"Copying {tmp_path}/src_dir/20200101.mp4 to {tmp_path}/dest_dir/2020/Jan/20200101.mp4")
@@ -149,7 +208,7 @@ def test_dry_run(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger, dry_run=True)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Processing file {tmp_path}/src_dir/20230809.jpg"),
         call(f"Could not find DateTimeOriginal in exif data for {tmp_path}/src_dir/20230809.jpg, trying DateTime instead"),
         call(f"Could not find DateTime in exif data for {tmp_path}/src_dir/20230809.jpg"),
@@ -177,13 +236,16 @@ def test_deleting_source_true(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger, dry_run=False, delete_source=True)
 
-    mock_logger.info.assert_has_calls([
+    mock_logger.debug.assert_has_calls([
         call(f"Processing file {tmp_path}/src_dir/20230809.jpg"),
         call(f"Could not find DateTimeOriginal in exif data for {tmp_path}/src_dir/20230809.jpg, trying DateTime instead"),
         call(f"Could not find DateTime in exif data for {tmp_path}/src_dir/20230809.jpg"),
         call(f"Extracting date from file name for {tmp_path}/src_dir/20230809.jpg"),
         call(f"Copying {tmp_path}/src_dir/20230809.jpg to {tmp_path}/dest_dir/2023/Aug/20230809.jpg"),
-        call(f"Deleting {tmp_path}/src_dir/20230809.jpg"),
+        call(f"Deleting {tmp_path}/src_dir/20230809.jpg")
+    ])
+
+    mock_logger.info.assert_has_calls([
         call(f"Source contained 1 files before processing and 0 after"),
         call(f"Destination contained 0 files before processing and 1 after")
     ])
@@ -202,5 +264,5 @@ def test_deleting_source_false(tmp_path):
     mock_logger = Mock()
     processor.process(tmp_path / "src_dir", tmp_path / "dest_dir", mock_logger, dry_run=False, delete_source=False)
 
-    assert call(f"Deleting {tmp_path}/src_dir/20230809.jpg") not in mock_logger.info.mock_calls
+    assert call(f"Deleting {tmp_path}/src_dir/20230809.jpg") not in mock_logger.debug.mock_calls
     assert Directory(tmp_path / "src_dir").file_count == 1

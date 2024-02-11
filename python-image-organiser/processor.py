@@ -146,6 +146,8 @@ def process(src_root, dest_root, logger, dry_run=False, delete_source=False, del
 
     pre_src_count = src.file_count
     pre_dest_count = dest.file_count
+    unorganised_count = 0
+    duplicate_count = 0
 
     if not directory_checks(src, dest, logger):
         logger.error(f"There was an issue with the target directories, exiting")
@@ -171,11 +173,15 @@ def process(src_root, dest_root, logger, dry_run=False, delete_source=False, del
             same = False
 
         if same:
-            logger.info(f"Not copying {file.absolute_path} as {dest_file} exists and is the same")
+            logger.debug(f"Not copying {file.absolute_path} as {dest_file} exists and is the same")
             ignored_files.append(file.absolute_path)
+            duplicate_count += 1
             continue
 
-        logger.info(f"Copying {file.absolute_path} to {dest_file}")
+        if not create_date:
+            unorganised_count += 1
+
+        logger.debug(f"Copying {file.absolute_path} to {dest_file}")
 
         if not dry_run:
             os.makedirs(dest_dir, exist_ok=True)
@@ -197,7 +203,8 @@ def process(src_root, dest_root, logger, dry_run=False, delete_source=False, del
     post_src_count = src.file_count
     post_dest_count = dest.file_count
 
-    logger.info(f"Ignored {len(ignored_files)} files")
+    logger.info(f"Ignored {len(ignored_files)} files of which {duplicate_count} were duplicates")
+    logger.info(f"Sent {unorganised_count} files to the unorganised folder")
     logger.info(f"Source contained {pre_src_count} files before processing and {post_src_count} after")
     logger.info(f"Destination contained {pre_dest_count} files before processing and {post_dest_count} after")
 
