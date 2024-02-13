@@ -172,6 +172,7 @@ def process(src_root, dest_root, logger, dry_run=False, delete_source=False, del
 
         try:
             same = filecmp.cmp(file.absolute_path, dest_file, shallow=True)
+            logger.debug(f"If {dest_file} exists, are {file.absolute_path} and {dest_file} the same?: {same}")
         except FileNotFoundError:
             same = False
 
